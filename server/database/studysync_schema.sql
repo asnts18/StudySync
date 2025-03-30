@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS studysync;
 USE studysync;
 
 -- --------------------------------------------------------------------
--- Core Tables - Abby's responsibility
+-- CREATE TABLES
 -- --------------------------------------------------------------------
 
 -- Create University table
@@ -13,7 +13,6 @@ CREATE TABLE University (
     university_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     location VARCHAR(255),
-    UNIQUE KEY idx_university_name (name)
 );
 
 -- Create User table
@@ -25,11 +24,9 @@ CREATE TABLE User (
     last_name VARCHAR(100) NOT NULL,
     bio TEXT,
     university_id INT,
-    profile_image_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     FOREIGN KEY (university_id) REFERENCES University(university_id),
-    UNIQUE KEY idx_user_email (email)
 );
 
 -- Create Course table
@@ -40,38 +37,11 @@ CREATE TABLE Course (
     semester VARCHAR(20),
     description TEXT,
     course_type VARCHAR(50),
-    PRIMARY KEY (course_code, university_id),
+    PRIMARY KEY (course_code, university_id)
     FOREIGN KEY (university_id) REFERENCES University(university_id),
-    INDEX idx_course_name (name)
 );
 
--- --------------------------------------------------------------------
--- Study Group & Meeting System - Navaneeth's responsibility
--- --------------------------------------------------------------------
-
--- TODO: Navaneeth - Create the following tables:
--- 1. Create StudyGroup table
-
--- 2. Create Meeting table
-
--- 3. Create Tags table and Meeting_Tag junction table
-
--- --------------------------------------------------------------------
--- Membership System - Abby's responsibility
--- --------------------------------------------------------------------
-
--- Create StudyGroupMember junction table
-CREATE TABLE StudyGroupMember (
-    user_id INT,
-    study_group_id INT,
-    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, study_group_id),
-    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
-    -- FOREIGN KEY (study_group_id) REFERENCES StudyGroup(study_group_id) ON DELETE CASCADE
-    -- TODO: Uncomment after Navaneeth creates the StudyGroup table
-);
-
--- Create User_Course junction table
+-- Create User_Course junction table (many-to-many)
 CREATE TABLE User_Course (
     user_id INT,
     course_code VARCHAR(20),
@@ -82,98 +52,150 @@ CREATE TABLE User_Course (
     FOREIGN KEY (course_code, university_id) REFERENCES Course(course_code, university_id) ON DELETE CASCADE
 );
 
--- Create GroupJoinRequests table
-CREATE TABLE GroupJoinRequest (
-    request_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    study_group_id INT NOT NULL,
-    message TEXT,
-    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
-    response_message TEXT,
-    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    responded_at TIMESTAMP NULL,
-    FOREIGN KEY (user_id) REFERENCES User(user_id),
-    -- FOREIGN KEY (study_group_id) REFERENCES StudyGroup(study_group_id),
-    -- TODO: Uncomment after Navaneeth creates the StudyGroup table
-    UNIQUE KEY idx_unique_request (user_id, study_group_id)
+-- Create StudyGroup table
+CREATE TABLE StudyGroup (
+    study_group_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    owner_id INT NOT NULL,
+    course_code VARCHAR(20),
+    university_id INT,
+    max_capacity INT DEFAULT 8,
+    is_private BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (owner_id) REFERENCES User(user_id),
+    FOREIGN KEY (course_code, university_id) REFERENCES Course(course_code, university_id),
+    CHECK (max_capacity BETWEEN 1 AND 8)
 );
 
+-- Create User_StudyGroup junction table (many-to-many)
+CREATE TABLE User_StudyGroup (
+    user_id INT,
+    study_group_id INT,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, study_group_id),
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (study_group_id) REFERENCES StudyGroup(study_group_id) ON DELETE CASCADE
+);
+
+-- Create Meeting table
+CREATE TABLE Meeting (
+    meeting_id INT AUTO_INCREMENT PRIMARY KEY,
+    study_group_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    meeting_date DATE NOT NULL,
+    location VARCHAR(255),
+    description TEXT,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (study_group_id) REFERENCES StudyGroup(study_group_id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES User(user_id)
+);
+
+-- TODO NAVANEETH: Create Tags table
+-- TODO NAVANEETH: Create Meeting_Tags (many-to-many relationship: Meeting and Tags tables)
+-- TODO NAVANEETH: Create GroupJoinRequests table
+-- TODO NAVANEETH: Create Achievements table
+-- TODO NAVANEETH: Create UserAchievement table (many-to-many relationship: User and Achievements tables)
+
+-- Notes: 
+-- Make sure to create relationships between tables using Foreign Keys 
+
 -- --------------------------------------------------------------------
--- Achievement System - Navaneeth's responsibility
+-- TEST DATA: INSERT STATEMENTS FOR INITIAL DATA
 -- --------------------------------------------------------------------
 
--- TODO: Navaneeth - Create the following tables:
--- 1. Create Achievement table
+-- TODO ABBY: add insert statements to the tables you created
+-- TODO NAVANEETH: add insert statements to the tables you created
 
--- 2. Create UserAchievement junction table
+-- ====================================================================
+-- DATABASE PROGRAMMING OBJECTS
+-- ====================================================================
 
--- --------------------------------------------------------------------
--- Database Functions - Shared responsibility
--- --------------------------------------------------------------------
+-- I. Database Functions (2)
+/*
+    Function #1: Checks if a user is a member of a specific study group
+    Example usage: SELECT fn_IsUserInGroup(1, 2); -- Check if user with ID 1 is in study group with ID 2
+*/ 
 
--- Abby's function - GetGroupMemberCount
 DELIMITER //
 
-CREATE FUNCTION fn_GetGroupMemberCount(group_id INT) 
-RETURNS INT
+CREATE FUNCTION fn_IsUserInGroup(p_user_id INT, p_group_id INT) 
+RETURNS BOOLEAN
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-    DECLARE member_count INT;
+    DECLARE is_member BOOLEAN;
     
-    SELECT COUNT(*) INTO member_count
-    FROM StudyGroupMember
-    WHERE study_group_id = group_id;
+    -- Check if the user exists in the User_StudyGroup junction table for the given group
+    SELECT COUNT(*) > 0 INTO is_member
+    FROM User_StudyGroup
+    WHERE user_id = p_user_id AND study_group_id = p_group_id;
     
-    RETURN member_count;
+    RETURN is_member;
 END//
 
 DELIMITER ;
 
--- TODO: Navaneeth - Create function fn_IsUserInGroup
+-- TODO NAVANEETH: 
+/*
+    Function #2: fn_GetGroupMemberCount - Get current member count for a group
+    Example usage: [ADD]
+*/
 
--- --------------------------------------------------------------------
--- Test Data: Insert statements for initial data
--- --------------------------------------------------------------------
+-- II. Stored Procedures (4)
+-- TODO ABBY
+/*
+    Stored Procedure #1: sp_RegisterUser - Handle user registration
+    Example usage: [ADD]
+*/
+-- TODO ABBY: 
+/*
+    Stored Procedure #2: sp_CreateStudyGroup - Create study group with validation   
+    Example usage: [ADD]
+*/
 
--- Abby's Test Data
--- Insert university data
-INSERT INTO University (name, location) VALUES 
-('Stanford University', 'Stanford, CA'),
-('Massachusetts Institute of Technology', 'Cambridge, MA'),
-('University of California, Berkeley', 'Berkeley, CA'),
-('Harvard University', 'Cambridge, MA'),
-('University of Washington', 'Seattle, WA');
+-- TODO NAVANEETH: 
+/*
+    Stored Procedure #3: sp_SearchStudyGroups - Search with filters (tags, course, etc.)
+    Example usage: [ADD]
+*/
+-- TODO NAVANEETH: 
+/*
+    Stored Procedure #4: sp_ProcessJoinRequest - Handle group join request approval/rejection
+    Example usage: [ADD]
+*/
 
--- Insert user data
-INSERT INTO User (email, password, first_name, last_name, bio, university_id) VALUES 
-('alice@example.com', '$2y$10$GxAZ7hQnKaJdalZzOjfOxuh9KgC14Jtq3e2vKjABzNhh1tU4GZwji', 'Alice', 'Johnson', 'Computer Science major interested in AI.', 1),
-('bob@example.com', '$2y$10$M2JiZjVkMzY2MzQ2YjY3M.QrHoHHBgOHR9bAjWl7m1rpZd4f9Bnte', 'Bob', 'Smith', 'Physics graduate student focusing on quantum computing.', 2),
-('charlie@example.com', '$2y$10$NWNjZTI3ZWM1YzIzMmVlZ.wh22ExE.cEwS2QOezgRxXaB7YpKkTyO', 'Charlie', 'Garcia', 'Biology major with a minor in data science.', 3),
-('diana@example.com', '$2y$10$YTA2MTcyOGE4MTYyZjA5Y.RuE9N9I0Z5ydiQJEEXlqwMVFxwv3.8S', 'Diana', 'Lee', 'Mathematics PhD candidate researching graph theory.', 4),
-('evan@example.com', '$2y$10$NjY0YWNlMTdkMjJlZmFiM.nTVY9s6SL0/3lmF65qwGz7XI9zY1OM2', 'Evan', 'Taylor', 'Computer Engineering student interested in robotics.', 5);
+-- III. Views (3)
+-- TODO ABBY: 
+/*
+    View #1: vw_StudyGroupWithMemberCount - Study groups with their current member counts
+    Example usage: [ADD]
+*/
 
--- Insert course data
-INSERT INTO Course (course_code, university_id, name, semester, description, course_type) VALUES
-('CS101', 1, 'Introduction to Computer Science', 'Spring 2025', 'Fundamentals of programming and algorithmic thinking.', 'Undergraduate'),
-('PHYS201', 2, 'Quantum Mechanics', 'Spring 2025', 'Introduction to quantum mechanics and wave functions.', 'Graduate'),
-('BIO150', 3, 'Cell Biology', 'Spring 2025', 'Study of cellular structures and functions.', 'Undergraduate'),
-('MATH301', 4, 'Graph Theory', 'Spring 2025', 'Mathematical structures to model pairwise relations.', 'Graduate'),
-('CS244', 5, 'Robotics', 'Spring 2025', 'Introduction to robotics and autonomous systems.', 'Undergraduate');
+-- TODO NAVANEETH: 
+/*
+    View #2: vw_UserCourses - Shows users and their enrolled courses
+    Example usage: [ADD]
+*/
 
--- Insert User_Course data (student enrollments)
-INSERT INTO User_Course (user_id, course_code, university_id) VALUES
-(1, 'CS101', 1),
-(2, 'PHYS201', 2),
-(3, 'BIO150', 3),
-(4, 'MATH301', 4),
-(5, 'CS244', 5);
+-- TODO NAVANEETH:
+/*
+    View #3: vw_UpcomingMeetings - Shows all scheduled upcoming meetings
+    Example usage: [ADD]
+*/
 
--- TODO: Navaneeth - Insert test data for:
--- 1. Study groups (at least 1 per course, with mix of public and private)
--- 2. Tags (at least 5 common tags like "Quiet Study", "Exam Prep", etc.)
--- 3. Meetings (1-2 per study group)
--- 4. Meeting-Tag relationships
--- 5. Default platform-wide achievements
--- 6. Study group memberships (assign users to different study groups)
--- 7. Group join requests (for private groups)
+-- IV. Triggers (2)
+-- TODO ABBY: 
+/*
+    Trigger #1: tr_AfterMeetingInsert - Update group activity statistics
+    Example usage: [ADD]
+*/
+-- TODO NAVANEETH:
+/*
+    Trigger #2: tr_AfterJoinRequest - Notify group owner of new join requests
+    Example usage: [ADD]
+*/
