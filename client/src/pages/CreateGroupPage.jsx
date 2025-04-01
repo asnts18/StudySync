@@ -1,18 +1,18 @@
-"use client"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { Textarea } from "../components/ui/textarea";
 
-import { useState } from "react"
-import { ArrowLeft } from "lucide-react"
-import { Textarea } from "../components/ui/textarea"
-
-const CreateGroupPage = ({ onBack, onCreateGroup }) => {
-  const [selectedTags, setSelectedTags] = useState([])
-  const [location, setLocation] = useState("")
-  const [groupSize, setGroupSize] = useState("3")
-  const [additionalInfo, setAdditionalInfo] = useState("")
-  const [selectedDays, setSelectedDays] = useState([]); // Stores selected days
-  const [meetingTime, setMeetingTime] = useState(""); // Stores selected time
-  const [repeating, setRepeating] = useState("none"); // Stores repeating frequency
-
+const CreateGroupPage = () => {
+  const navigate = useNavigate();
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [location, setLocation] = useState("");
+  const [groupSize, setGroupSize] = useState("3");
+  const [additionalInfo, setAdditionalInfo] = useState("");
+  const [selectedDays, setSelectedDays] = useState([]);
+  const [meetingTime, setMeetingTime] = useState("");
+  const [repeating, setRepeating] = useState("none");
+  const [groupName, setGroupName] = useState("");
 
   const tags = [
     "Practice Problems",
@@ -25,24 +25,28 @@ const CreateGroupPage = ({ onBack, onCreateGroup }) => {
     "Skill Building",
     "Design Sprint",
     "Cafe",
-  ]
+  ];
 
   const handleTagClick = (tag) => {
-    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
-  }
+    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission
-    onCreateGroup();
-  }
+    // Here you would typically handle form submission to your backend
+    // Then navigate to the created group page
+    navigate('/created');
+  };
 
   return (
     <div className="min-h-screen bg-white">
       <main className="max-w-6xl mx-auto px-8 py-12">
         {/* Header with back button */}
         <div className="flex items-center gap-4 mb-12">
-          <button onClick={onBack} className="p-2 border-2 border-black hover:bg-gray-200 transition-colors">
+          <button 
+            onClick={() => navigate('/')} 
+            className="p-2 border-2 border-black hover:bg-gray-200 transition-colors"
+          >
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-4xl font-bold">create a study group</h1>
@@ -50,13 +54,13 @@ const CreateGroupPage = ({ onBack, onCreateGroup }) => {
 
         <form onSubmit={handleSubmit} className="space-y-8 flex flex-col items-start">
 
-                      {/* Name Section */}
+          {/* Name Section */}
           <div className="space-y-4">
             <label className="block text-lg text-left">Give your study group a name!</label>
             <input
               type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
               placeholder="For fun study group"
               className="w-full p-4 border-2 border-black focus:outline-none"
             />
@@ -81,49 +85,45 @@ const CreateGroupPage = ({ onBack, onCreateGroup }) => {
             </div>
           </div>
 
-{/* Days and Times to Meet Section */}
-<div className="space-y-4 w-full flex flex-col items-start">
-  <label className="block text-lg text-left">Days and times to meet</label>
-  
-  {/* Days selection */}
-  <div className="flex flex-wrap gap-3">
-    {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-      <button
-        key={day}
-        type="button"
-        onClick={() => setSelectedDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day])}
-        className={`px-6 py-2 border-2 border-black rounded-full transition-colors ${
-          selectedDays.includes(day) ? "bg-primary-yellow" : "bg-white hover:bg-gray-100"
-        }`}
-      >
-        {day}
-      </button>
-    ))}
-  </div>
+          {/* Days and Times to Meet Section */}
+          <div className="space-y-4 w-full flex flex-col items-start">
+            <label className="block text-lg text-left">Days and times to meet</label>
+            <div className="flex flex-wrap gap-3">
+              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => setSelectedDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day])}
+                  className={`px-6 py-2 border-2 border-black rounded-full transition-colors ${
+                    selectedDays.includes(day) ? "bg-primary-yellow" : "bg-white hover:bg-gray-100"
+                  }`}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+            <input
+              type="time"
+              value={meetingTime}
+              onChange={(e) => setMeetingTime(e.target.value)}
+              className="w-48 p-4 border-2 border-black focus:outline-none bg-white"
+            />
+          </div>
 
-  {/* Time selection */}
-  <input
-    type="time"
-    value={meetingTime}
-    onChange={(e) => setMeetingTime(e.target.value)}
-    className="w-48 p-4 border-2 border-black focus:outline-none bg-white"
-  />
-</div>
-
-{/* Repeating Section */}
-<div className="space-y-4 w-full flex flex-col items-start">
-  <label className="block text-lg text-left">Repeating?</label>
-  <select
-    value={repeating}
-    onChange={(e) => setRepeating(e.target.value)}
-    className="w-48 p-4 border-2 border-black focus:outline-none appearance-none bg-white"
-  >
-    <option value="none">Not repeating</option>
-    <option value="weekly">Weekly</option>
-    <option value="biweekly">Biweekly</option>
-    <option value="monthly">Monthly</option>
-  </select>
-</div>
+          {/* Repeating Section */}
+          <div className="space-y-4 w-full flex flex-col items-start">
+            <label className="block text-lg text-left">Repeating?</label>
+            <select
+              value={repeating}
+              onChange={(e) => setRepeating(e.target.value)}
+              className="w-48 p-4 border-2 border-black focus:outline-none appearance-none bg-white"
+            >
+              <option value="none">Not repeating</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Biweekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
 
           {/* Location Section */}
           <div className="space-y-4">
@@ -154,18 +154,18 @@ const CreateGroupPage = ({ onBack, onCreateGroup }) => {
           </div>
 
           {/* Additional Info Section */}
-<div className="space-y-4 w-full">
-  <label className="block text-lg text-left">Anything else to add?</label>
-  <Textarea
-    value={additionalInfo}
-    onChange={(e) => setAdditionalInfo(e.target.value)}
-    placeholder={`Feel free to introduce yourself briefly, share your preferred group learning methods, what you want to get from the group study, your hobbies, personalities, etc.
+          <div className="space-y-4 w-full">
+            <label className="block text-lg text-left">Anything else to add?</label>
+            <Textarea
+              value={additionalInfo}
+              onChange={(e) => setAdditionalInfo(e.target.value)}
+              placeholder={`Feel free to introduce yourself briefly, share your preferred group learning methods, what you want to get from the group study, your hobbies, personalities, etc.
 
 Tip:
 The more you share, the easier to find the ideal group.`}
-    className="min-h-[200px] p-4 border-2 border-black focus:outline-none resize-none w-full"
-  />
-</div>
+              className="min-h-[200px] p-4 border-2 border-black focus:outline-none resize-none w-full"
+            />
+          </div>
 
           {/* Submit Button */}
           <button
@@ -177,7 +177,7 @@ The more you share, the easier to find the ideal group.`}
         </form>
       </main>
     </div>
-  )
-}
+  );
+};
 
-export default CreateGroupPage
+export default CreateGroupPage;

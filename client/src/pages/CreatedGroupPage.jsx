@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StudyGroupCard from '../components/StudyGroupCard';
-import { ArrowLeft } from 'lucide-react';  // Add this import for the back arrow
+import { ArrowLeft } from 'lucide-react';
 
-const CreatedGroupPage = ({ onBack }) => {
+const CreatedGroupPage = () => {
+  const navigate = useNavigate();
   const [upcomingStudyGroups] = useState([
     {
       name: "For fun study group",
@@ -17,13 +19,13 @@ const CreatedGroupPage = ({ onBack }) => {
 
   const [pastStudyGroups] = useState([
     {
-        name: "Comp11 study group",
-        currentMembers: 3,
-        maxMembers: 5,
-        meetingTime: "Tue/Thu 3-5pm",
-        location: "Library",
-        description: "CS-0011 - Intro to Computer Science",
-        tags: ["Intro Level", "Programming"]
+      name: "Comp11 study group",
+      currentMembers: 3,
+      maxMembers: 5,
+      meetingTime: "Tue/Thu 3-5pm",
+      location: "Library",
+      description: "CS-0011 - Intro to Computer Science",
+      tags: ["Intro Level", "Programming"]
     }
   ]);
 
@@ -33,17 +35,18 @@ const CreatedGroupPage = ({ onBack }) => {
       <main className="max-w-6xl mx-auto px-8 py-12">
         {/* Header with back button */}
         <div className="flex items-center gap-4 mb-12">
-          <button onClick={onBack} className="p-2 border-2 border-black hover:bg-gray-200 transition-colors">
-            <ArrowLeft className="w-6 h-6" /> {/* The back icon */}
+          <button 
+            onClick={() => navigate('/')} 
+            className="p-2 border-2 border-black hover:bg-gray-200 transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6" />
           </button>
         </div>
 
-
-{/* Welcome Section */}
-<div className="flex items-center mb-12 text-left">  {/* Use flexbox to align them side by side */}
-  <h1 className="text-4xl font-bold mr-4">Your group has been created!</h1>  {/* Add margin-right for spacing */}
-</div>
-
+        {/* Welcome Section */}
+        <div className="flex items-center mb-12 text-left">
+          <h1 className="text-4xl font-bold mr-4">Your group has been created!</h1>
+        </div>
 
         {/* Upcoming Study Sessions */}
         <section className="mb-12">
@@ -81,4 +84,4 @@ const CreatedGroupPage = ({ onBack }) => {
   );
 };
 
-export default CreatedGroupPage;  {/* Fix: This should export CreatedGroupPage */}
+export default CreatedGroupPage;

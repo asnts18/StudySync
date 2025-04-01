@@ -1,10 +1,11 @@
-
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, ArrowLeft } from 'lucide-react';
 import GroupDetailModal from '../components/GroupDetailModal';
 import StudyGroupCard from '../components/StudyGroupCard';
 
-const JoinGroupPage = ({ onBack }) => {
+const JoinGroupPage = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -81,12 +82,11 @@ const JoinGroupPage = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-white">
-
       <main className="max-w-6xl mx-auto px-8 py-12">
         {/* Header with back button */}
         <div className="flex items-center gap-4 mb-8">
           <button 
-            onClick={onBack}
+            onClick={() => navigate('/')}
             className="p-2 border-2 border-black hover:bg-gray-200 transition-colors"
           >
             <ArrowLeft className="w-6 h-6" />
