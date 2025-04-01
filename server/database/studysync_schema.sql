@@ -108,6 +108,58 @@ CREATE TABLE Meeting (
 -- TODO NAVANEETH: Create Achievements table
 -- TODO NAVANEETH: Create UserAchievement table (many-to-many relationship: User and Achievements tables)
 
+-- Create Tags table
+CREATE TABLE Tags (
+    tag_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT
+);
+
+-- Create many-to-many relationship table for Meeting and Tags
+CREATE TABLE Meeting_Tags (
+    meeting_id INT,
+    tag_id INT,
+    PRIMARY KEY (meeting_id, tag_id),
+    FOREIGN KEY (meeting_id) REFERENCES Meeting(meeting_id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES Tags(tag_id) ON DELETE CASCADE
+);
+
+-- Create GroupJoinRequests table
+CREATE TABLE GroupJoinRequests (
+    request_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    study_group_id INT NOT NULL,
+    request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    response_date TIMESTAMP,
+    response_message TEXT,
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (study_group_id) REFERENCES StudyGroup(study_group_id) ON DELETE CASCADE
+);
+
+-- Create Achievements table
+CREATE TABLE Achievements (
+    achievement_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    icon_url VARCHAR(255),         -- URL for an icon/image representing the achievement
+    point_value INT DEFAULT 0,
+    is_platform_default BOOLEAN DEFAULT TRUE,  -- Determines if it's a platform-wide achievement
+    group_id INT,                  -- Can be NULL for platform-wide achievements, or tied to a specific group
+    FOREIGN KEY (group_id) REFERENCES StudyGroup(study_group_id) ON DELETE CASCADE
+);
+
+-- Create UserAchievements junction table (many-to-many)
+CREATE TABLE UserAchievements (
+    user_id INT,
+    achievement_id INT,
+    earned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, achievement_id),
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (achievement_id) REFERENCES Achievements(achievement_id) ON DELETE CASCADE
+);
+
+
 -- Notes: 
 -- Make sure to create relationships between tables using Foreign Keys 
 
@@ -188,91 +240,48 @@ INSERT INTO Meeting (study_group_id, name, start_time, end_time, location, descr
 
 -- TODO NAVANEETH: add insert statements to the tables you created (for initial data)
 
--- ====================================================================
--- DATABASE PROGRAMMING OBJECTS
--- ====================================================================
+-- Insert Tags
+INSERT INTO Tags (tag_id,name, description) VALUES
+(1,'Quiet Study', 'A tag for meetings that are focused on quiet study or concentration'),
+(2,'Exam Prep', 'A tag for meetings that are focused on preparing for exams'),
+(3,'Social', 'A tag for meetings that involve socializing or networking'),
+(4,'Homework', 'A tag for meetings dedicated to working on homework or assignments'),
+(5,'Project Work', 'A tag for meetings focused on collaborative project work');
 
--- I. Database Functions (2)
-/*
-    Function #1: Checks if a user is a member of a specific study group
-    Example usage: SELECT fn_IsUserInGroup(1, 2); -- Check if user with ID 1 is in study group with ID 2
-*/ 
+-- Insert Meeting_Tags (many-to-many relationship between Meetings and Tags)
+INSERT INTO Meeting_Tags (meeting_id, tag_id) VALUES
+(1, 1),  -- CS61A Midterm Review tagged as Quiet Study
+(1, 2),  -- CS61A Midterm Review tagged as Exam Prep
+(2, 4),  -- MATH51 Problem Session tagged as Homework
+(3, 1),  -- Algorithms Study Session tagged as Quiet Study
+(3, 5),  -- Algorithms Study Session tagged as Project Work
+(4, 3),  -- CS50 Office Hours tagged as Social
+(5, 4),  -- INFO340 Project Planning tagged as Homework
+(6, 5),  -- Weekly CS61A Study tagged as Project Work
+(7, 1),  -- MATH51 Discussion tagged as Quiet Study
+(8, 2);  -- Algorithms Practice tagged as Exam Prep
 
-DELIMITER //
+-- Insert GroupJoinRequests
+INSERT INTO GroupJoinRequests (user_id, study_group_id, request_date, status, response_date, response_message) VALUES
+(5, 3, '2023-09-15 10:30:00', 'pending', NULL, NULL),  -- Evan requests to join Algorithms Club
+(1, 3, '2023-09-15 11:00:00', 'approved', '2023-09-16 12:00:00', 'Welcome to the club, Alice!'),  -- Alice approved for Algorithms Club
+(2, 4, '2023-09-16 14:15:00', 'rejected', '2023-09-17 13:30:00', 'Sorry, the group is full at the moment.'),  -- Bob rejected for CS50 Harvard
+(4, 2, '2023-09-17 09:00:00', 'pending', NULL, NULL);  -- Diana requests to join MATH51 Warriors
 
-CREATE FUNCTION fn_IsUserInGroup(p_user_id INT, p_group_id INT) 
-RETURNS BOOLEAN
-DETERMINISTIC
-READS SQL DATA
-BEGIN
-    DECLARE is_member BOOLEAN;
-    
-    -- Check if the user exists in the User_StudyGroup junction table for the given group
-    SELECT COUNT(*) > 0 INTO is_member
-    FROM User_StudyGroup
-    WHERE user_id = p_user_id AND study_group_id = p_group_id;
-    
-    RETURN is_member;
-END//
+-- Insert Achievements
+INSERT INTO Achievements (name, description, icon_url, point_value, is_platform_default, group_id) VALUES
+('CS61A Completion', 'Awarded for completing all assignments in CS61A', 'https://example.com/cs61a_icon.png', 10, TRUE, NULL),  -- Platform-wide achievement
+('MATH51 Problem Solver', 'Awarded for solving 100+ MATH51 problems', 'https://example.com/math51_icon.png', 5, TRUE, NULL),  -- Platform-wide achievement
+('Algorithms Expert', 'Awarded for mastering algorithms concepts', 'https://example.com/algorithms_icon.png', 15, TRUE, NULL),  -- Platform-wide achievement
+('CS50 Contributor', 'Awarded for contributing significantly to CS50 study groups', 'https://example.com/cs50_contributor_icon.png', 8, FALSE, 4),  -- Group-specific achievement for CS50 Harvard group
+('Web Dev Master', 'Awarded for outstanding performance in INFO340', 'https://example.com/web_dev_icon.png', 12, FALSE, 5);  -- Group-specific achievement for Web Dev Masters group
 
-DELIMITER ;
+-- Insert UserAchievements (many-to-many relationship between Users and Achievements)
+INSERT INTO UserAchievements (user_id, achievement_id, earned_date) VALUES
+(1, 1, '2023-12-01 10:00:00'),  -- Alice earns CS61A Completion
+(2, 2, '2023-11-25 15:30:00'),  -- Bob earns MATH51 Problem Solver
+(3, 3, '2023-11-20 17:45:00'),  -- Charlie earns Algorithms Expert
+(4, 4, '2023-11-10 13:00:00'),  -- Diana earns CS50 Contributor
+(5, 5, '2023-11-30 09:00:00');  -- Evan earns Web Dev Master
 
--- TODO NAVANEETH: 
-/*
-    Function #2: fn_GetGroupMemberCount - Get current member count for a group
-    Example usage: [ADD]
-*/
 
--- II. Stored Procedures (4)
--- TODO ABBY
-/*
-    Stored Procedure #1: sp_RegisterUser - Handle user registration
-    Example usage: [ADD]
-*/
--- TODO ABBY: 
-/*
-    Stored Procedure #2: sp_CreateStudyGroup - Create study group with validation   
-    Example usage: [ADD]
-*/
-
--- TODO NAVANEETH: 
-/*
-    Stored Procedure #3: sp_SearchStudyGroups - Search with filters (tags, course, etc.)
-    Example usage: [ADD]
-*/
--- TODO NAVANEETH: 
-/*
-    Stored Procedure #4: sp_ProcessJoinRequest - Handle group join request approval/rejection
-    Example usage: [ADD]
-*/
-
--- III. Views (3)
--- TODO ABBY: 
-/*
-    View #1: vw_StudyGroupWithMemberCount - Study groups with their current member counts
-    Example usage: [ADD]
-*/
-
--- TODO NAVANEETH: 
-/*
-    View #2: vw_UserCourses - Shows users and their enrolled courses
-    Example usage: [ADD]
-*/
-
--- TODO NAVANEETH:
-/*
-    View #3: vw_UpcomingMeetings - Shows all scheduled upcoming meetings
-    Example usage: [ADD]
-*/
-
--- IV. Triggers (2)
--- TODO ABBY: 
-/*
-    Trigger #1: tr_AfterMeetingInsert - Update group activity statistics
-    Example usage: [ADD]
-*/
--- TODO NAVANEETH:
-/*
-    Trigger #2: tr_AfterJoinRequest - Notify group owner of new join requests
-    Example usage: [ADD]
-*/
