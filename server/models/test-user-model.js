@@ -8,7 +8,7 @@ async function testUserModel() {
     
     // Test create user
     const testUser = {
-      email: `test${Math.floor(Math.random() * 1000)}@example.com`, // Make email unique
+      email: `hello${Math.floor(Math.random() * 1000)}@example.com`, // Make email unique
       password: 'hashedpassword123', // In a real app, this would be hashed
       first_name: 'Test',
       last_name: 'User',
@@ -35,7 +35,7 @@ async function testUserModel() {
       email: testUser.email,
       first_name: 'Updated',
       last_name: 'Name',
-      bio: 'Updated bio',
+      bio: 'Testing... Updated!!!',
       university_id: 1
     };
     console.log(`Updating user ${createdUser.user_id} with:`, updateData);

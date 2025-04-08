@@ -1,9 +1,9 @@
 // services/achievementService.js
-const pool = require('../database');
+const db = require('../config/db.config');
 
 const getUserAchievements = async (userId) => {
   try {
-    const [rows] = await pool.query(
+    const [rows] = await db.query(
       `SELECT a.id, a.name, a.description, a.points, a.icon_url, ua.earned_at
        FROM achievements a
        JOIN user_achievements ua ON a.id = ua.achievement_id
@@ -22,7 +22,7 @@ const getUserAchievements = async (userId) => {
 const awardAchievement = async (userId, achievementId) => {
   try {
     // Check if user already has this achievement
-    const [existing] = await pool.query(
+    const [existing] = await db.query(
       'SELECT * FROM user_achievements WHERE user_id = ? AND achievement_id = ?',
       [userId, achievementId]
     );
@@ -32,13 +32,13 @@ const awardAchievement = async (userId, achievementId) => {
     }
     
     // Award the achievement
-    await pool.query(
+    await db.query(
       'INSERT INTO user_achievements (user_id, achievement_id, earned_at) VALUES (?, ?, NOW())',
       [userId, achievementId]
     );
     
     // Get the awarded achievement details
-    const [achievement] = await pool.query(
+    const [achievement] = await db.query(
       'SELECT id, name, description, points, icon_url FROM achievements WHERE id = ?',
       [achievementId]
     );
