@@ -3,7 +3,7 @@ const userService = require('../services/userService');
 
 const getProfile = async (req, res) => {
   try {
-    const userId = req.user.id; // Assuming req.user is set by auth middleware
+    const userId = req.userId; // Assuming req.user is set by auth middleware
     const userProfile = await userService.getUserProfile(userId);
     if (!userProfile) {
       return res.status(404).json({ message: 'User not found' });
@@ -17,7 +17,7 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const userId = req.user.id; // Assuming req.user is set by auth middleware
+    const userId = req.userId; // Assuming req.user is set by auth middleware
     const updatedProfile = await userService.updateUserProfile(userId, req.body);
     res.status(200).json(updatedProfile);
   } catch (error) {
@@ -26,9 +26,10 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// TODO 
 const getProfileWithAchievements = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.userId;
     const fullProfile = await userService.getFullUserProfile(userId);
     
     if (!fullProfile) {
@@ -42,10 +43,10 @@ const getProfileWithAchievements = async (req, res) => {
   }
 };
 
-// Add this new function to your controller
+// TODO
 const getCompleteProfile = async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.userId;
       const completeProfile = await userService.getCompleteUserProfileUsingProcedures(userId);
       
       if (!completeProfile) {

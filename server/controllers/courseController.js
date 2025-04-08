@@ -13,7 +13,7 @@ const getCoursesByUniversity = async (req, res) => {
 
 const getUserCourses = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.userId;
     const courses = await courseService.getUserCourses(userId);
     res.status(200).json(courses);
   } catch (error) {
@@ -24,7 +24,7 @@ const getUserCourses = async (req, res) => {
 
 const addUserToCourse = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.userId;
     const { courseId } = req.body;
     
     if (!courseId) {
@@ -41,7 +41,7 @@ const addUserToCourse = async (req, res) => {
 
 const removeUserFromCourse = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.userId;
     const courseId = req.params.courseId;
     
     const result = await courseService.removeUserFromCourse(userId, courseId);

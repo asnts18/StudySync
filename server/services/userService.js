@@ -1,10 +1,10 @@
-
-const pool = require('../database'); // Assuming you have a database connection set up
+// services/userService.js
+const db = require('../config/db.config');
 
 const getUserProfile = async (userId) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT id, username, email, first_name, last_name, university_id, created_at FROM users WHERE id = ?', 
+    const rows = await db.query(
+      'SELECT user_id, email, first_name, last_name, bio, university_id FROM User WHERE user_id = ?', 
       [userId]
     );
     return rows[0];
@@ -16,10 +16,10 @@ const getUserProfile = async (userId) => {
 
 const updateUserProfile = async (userId, userData) => {
   try {
-    const { first_name, last_name, email, university_id } = userData;
-    await pool.query(
-      'UPDATE users SET first_name = ?, last_name = ?, email = ?, university_id = ? WHERE id = ?',
-      [first_name, last_name, email, university_id, userId]
+    const { first_name, last_name, email, bio, university_id } = userData;
+    await db.query(
+      'UPDATE User SET first_name = ?, last_name = ?, email = ?, bio = ?, university_id = ? WHERE user_id = ?',
+      [first_name, last_name, email, bio, university_id, userId]
     );
     return getUserProfile(userId);
   } catch (error) {
@@ -28,19 +28,18 @@ const updateUserProfile = async (userId, userData) => {
   }
 };
 
-
 const achievementService = require('./achievementService');
 
 // Get comprehensive user profile with achievements
 const getFullUserProfile = async (userId) => {
   try {
     // Get basic user info
-    const [userRows] = await pool.query(
-      `SELECT u.id, u.username, u.email, u.first_name, u.last_name, 
-              u.created_at, univ.name as university_name
-       FROM users u
-       LEFT JOIN universities univ ON u.university_id = univ.id
-       WHERE u.id = ?`,
+    const userRows = await db.query(
+      `SELECT u.user_id, u.email, u.first_name, u.last_name, u.bio,
+              univ.name as university_name
+       FROM User u
+       LEFT JOIN University univ ON u.university_id = univ.university_id
+       WHERE u.user_id = ?`,
       [userId]
     );
     
@@ -54,21 +53,21 @@ const getFullUserProfile = async (userId) => {
     const achievements = await achievementService.getUserAchievements(userId);
     
     // Get number of courses the user is enrolled in
-    const [courseCountResult] = await pool.query(
-      'SELECT COUNT(*) as course_count FROM user_courses WHERE user_id = ?',
+    const courseCountResult = await db.query(
+      'SELECT COUNT(*) as course_count FROM User_Course WHERE user_id = ?',
       [userId]
     );
     const courseCount = courseCountResult[0].course_count;
     
     // Get number of study groups the user belongs to
-    const [groupCountResult] = await pool.query(
-      'SELECT COUNT(*) as group_count FROM user_study_groups WHERE user_id = ?',
+    const groupCountResult = await db.query(
+      'SELECT COUNT(*) as group_count FROM User_StudyGroup WHERE user_id = ?',
       [userId]
     );
     const groupCount = groupCountResult[0].group_count;
     
     // Calculate total achievement points
-    const totalPoints = achievements.reduce((sum, achievement) => sum + achievement.points, 0);
+    const totalPoints = achievements.reduce((sum, achievement) => sum + achievement.point_value || 0, 0);
     
     // Return combined profile
     return {
@@ -87,8 +86,26 @@ const getFullUserProfile = async (userId) => {
   }
 };
 
+// Add the stored procedure implementation from userController
+const getCompleteUserProfileUsingProcedures = async (userId) => {
+  try {
+    // Call stored procedure instead of direct queries
+    const result = await db.callProcedure('sp_GetUserProfile', [userId]);
+    
+    if (!result || result.length === 0) {
+      return null;
+    }
+    
+    return result[0]; // Return first row of result set
+  } catch (error) {
+    console.error('Error fetching complete user profile using procedures:', error);
+    throw new Error('Failed to fetch complete user profile');
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
-  getFullUserProfile
+  getFullUserProfile,
+  getCompleteUserProfileUsingProcedures
 };
