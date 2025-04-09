@@ -11,7 +11,7 @@ const LandingPage = () => {
             <h1 className="text-5xl font-bold mb-6">Find your perfect study group</h1>
             <p className="text-xl mb-8">
               Connect with fellow students, share knowledge, and ace your classes together.
-              StudyBuddy makes it easy to find or create the ideal study group.
+              StudySync makes it easy to find or create the ideal study group.
             </p>
             <div className="flex gap-4">
               <Link 

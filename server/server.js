@@ -3,13 +3,15 @@ const cors = require('cors');
 const morgan = require('morgan');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/userRoutes');
+const universityRoutes = require('./routes/universityRoutes');
+
 
 
 
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 
 // Middleware
@@ -20,6 +22,8 @@ app.use(morgan('dev'));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/universities', universityRoutes);
+
 
 
 // Basic route for testing
