@@ -6,6 +6,8 @@ import RegisterPage from './pages/RegisterPage';
 import JoinGroupPage from './pages/JoinGroupPage';
 import CreateGroupPage from './pages/CreateGroupPage';
 import CreatedGroupPage from './pages/CreatedGroupPage';
+import ProfilePage from './pages/ProfilePage'; 
+import ProfileEditPage from './pages/ProfileEditPage'; // Import the new ProfileEditPage
 import Header from './components/Header';  
 import Footer from './components/Footer'; 
 import { AuthProvider } from './contexts/AuthContext';
@@ -42,6 +44,17 @@ function App() {
               <Route path="/created" element={
                 <ProtectedRoute>
                   <CreatedGroupPage />
+                </ProtectedRoute>
+              } />
+              {/* Profile routes */}
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile/edit" element={
+                <ProtectedRoute>
+                  <ProfileEditPage />
                 </ProtectedRoute>
               } />
             </Routes>

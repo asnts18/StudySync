@@ -102,11 +102,6 @@ CREATE TABLE Meeting (
     )
 );
 
--- TODO NAVANEETH: Create Tags table
--- TODO NAVANEETH: Create Meeting_Tags (many-to-many relationship: Meeting and Tags tables)
--- TODO NAVANEETH: Create GroupJoinRequests table
--- TODO NAVANEETH: Create Achievements table
--- TODO NAVANEETH: Create UserAchievement table (many-to-many relationship: User and Achievements tables)
 
 -- Create Tags table
 CREATE TABLE Tags (
@@ -142,7 +137,6 @@ CREATE TABLE Achievements (
     achievement_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    icon_url VARCHAR(255),         -- URL for an icon/image representing the achievement
     point_value INT DEFAULT 0,
     is_platform_default BOOLEAN DEFAULT TRUE,  -- Determines if it's a platform-wide achievement
     group_id INT,                  -- Can be NULL for platform-wide achievements, or tied to a specific group
