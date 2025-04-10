@@ -26,7 +26,7 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// TODO 
+// TODO: CHECK 
 const getProfileWithAchievements = async (req, res) => {
   try {
     const userId = req.userId;
@@ -43,7 +43,7 @@ const getProfileWithAchievements = async (req, res) => {
   }
 };
 
-// TODO
+// TODO: CHECK
 const getCompleteProfile = async (req, res) => {
     try {
       const userId = req.userId;
