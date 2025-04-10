@@ -32,13 +32,16 @@ const Header = () => {
               <>
                 {/* Logged in state */}
                 <div className="flex items-center space-x-4">
-                  <Link to="/profile" className="flex items-center space-x-2 hover:text-primary-yellow">
+                  <Link 
+                    to="/profile" 
+                    className="flex items-center space-x-2 hover:text-primary-yellow transition-colors px-3 py-2 rounded-md hover:bg-gray-100"
+                  >
                     <User className="w-5 h-5" />
                     <span>{currentUser.first_name}</span>
                   </Link>
                   <button 
                     onClick={handleLogout}
-                    className="flex items-center space-x-2 text-gray-600 hover:text-black"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-black px-3 py-2 rounded-md hover:bg-gray-100 transition-colors"
                   >
                     <LogOut className="w-5 h-5" />
                     <span>Logout</span>

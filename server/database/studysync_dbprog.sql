@@ -27,7 +27,6 @@ END//
 
 DELIMITER ;
 
--- TODO NAVANEETH: 
 -- Function #2: fn_GetGroupMemberCount - Get current member count for a group
 /*
     Example usage: SELECT fn_GetGroupMemberCount(2); -- Get the number of members in study group with ID 2
@@ -65,7 +64,6 @@ DELIMITER ;
 */
 
 
--- TODO NAVANEETH: 
 -- Stored Procedure #3: sp_SearchStudyGroups - Search with filters (tags, course, etc.)
 /*
     Example usage:
@@ -309,7 +307,6 @@ JOIN Course c ON uc.course_code = c.course_code AND uc.university_id = c.univers
 JOIN University un ON c.university_id = un.university_id;
 
 
--- TODO NAVANEETH:
 -- View #3: vw_UpcomingMeetings - Shows all scheduled upcoming meetings
 /*
     Example usage:
