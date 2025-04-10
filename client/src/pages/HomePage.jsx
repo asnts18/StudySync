@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StudyGroupCard from '../components/StudyGroupCard';
 import ActionButton from '../components/ActionButton';
+import { useAuth } from '../contexts/AuthContext';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { currentUser, loading } = useAuth();
+  const [userName, setUserName] = useState('');
   const [currentStudyGroups] = useState([
     {
       name: "Comp11 study group",
@@ -17,12 +20,27 @@ const HomePage = () => {
     }
   ]);
 
+  // Update username when currentUser changes
+  useEffect(() => {
+    if (currentUser && currentUser.first_name) {
+      setUserName(currentUser.first_name);
+    }
+  }, [currentUser]);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-8 py-12">
         {/* Welcome Section */}
-        <h1 className="text-4xl font-bold mb-12 text-left">welcome back, Brigitte!</h1>
+        <h1 className="text-4xl font-bold mb-12 text-left">
+          {loading ? (
+            "Loading..."
+          ) : userName ? (
+            `welcome back, ${userName}!`
+          ) : (
+            "welcome back!"
+          )}
+        </h1>
 
         {/* Action Buttons */}
         <div className="flex gap-6 mb-16">

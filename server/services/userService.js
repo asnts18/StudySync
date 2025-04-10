@@ -30,6 +30,7 @@ const updateUserProfile = async (userId, userData) => {
 
 const achievementService = require('./achievementService');
 
+// TODO: CHECK 
 // Get comprehensive user profile with achievements
 const getFullUserProfile = async (userId) => {
   try {
@@ -86,6 +87,7 @@ const getFullUserProfile = async (userId) => {
   }
 };
 
+// TODO: CHECL
 // Add the stored procedure implementation from userController
 const getCompleteUserProfileUsingProcedures = async (userId) => {
   try {

@@ -86,7 +86,7 @@ const JoinGroupPage = () => {
         {/* Header with back button */}
         <div className="flex items-center gap-4 mb-8">
           <button 
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/home')}
             className="p-2 border-2 border-black hover:bg-gray-200 transition-colors"
           >
             <ArrowLeft className="w-6 h-6" />
