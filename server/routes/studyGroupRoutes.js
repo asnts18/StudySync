@@ -12,4 +12,7 @@ const auth = require('../middleware/auth.middleware');
 // 3. Define the POST route for creating a study group
 router.post('/', auth.verifyToken, groupController.createStudyGroup);
 
+// GET endpoint to list/filter study groups
+router.get('/', groupController.listStudyGroups);
+
 module.exports = router;
