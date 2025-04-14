@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -7,11 +7,19 @@ import JoinGroupPage from './pages/JoinGroupPage';
 import CreateGroupPage from './pages/CreateGroupPage';
 import CreatedGroupPage from './pages/CreatedGroupPage';
 import ProfilePage from './pages/ProfilePage'; 
-import ProfileEditPage from './pages/ProfileEditPage'; // Import the new ProfileEditPage
+import ProfileEditPage from './pages/ProfileEditPage';
 import Header from './components/Header';  
 import Footer from './components/Footer'; 
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+
+// Create a new component to handle the root route redirection
+const RootRedirect = () => {
+  const { currentUser } = useAuth();
+  
+  // If user is logged in, redirect to /home, otherwise show the landing page
+  return currentUser ? <Navigate to="/home" replace /> : <LandingPage />;
+};
 
 function App() {
   return (
@@ -21,7 +29,8 @@ function App() {
           <Header />
           <div className="flex-1">
             <Routes>
-              <Route path="/" element={<LandingPage />} />
+              {/* Change the root route to use the RootRedirect component */}
+              <Route path="/" element={<RootRedirect />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               
