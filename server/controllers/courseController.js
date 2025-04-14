@@ -52,9 +52,59 @@ const removeUserFromCourse = async (req, res) => {
   }
 };
 
+const createCourse = async (req, res) => {
+  try {
+    const { course_code, name, university_id, semester, description, course_type } = req.body;
+    const userId = req.userId;
+    
+    // Validate required fields
+    if (!course_code || !name || !university_id) {
+      return res.status(400).json({ message: 'Course code, name, and university ID are required' });
+    }
+    
+    // Check if course already exists
+    const existingCourse = await courseService.getCourseByCodeAndUniversity(course_code, university_id);
+    
+    if (existingCourse) {
+      return res.status(409).json({ 
+        message: 'Course already exists', 
+        course: existingCourse 
+      });
+    }
+    
+    // Create new course
+    const newCourse = await courseService.createCourse({
+      course_code,
+      name,
+      university_id,
+      semester: semester || 'Current',
+      description: description || null,
+      course_type: course_type || 'Custom'
+    });
+    
+    // Directly enroll the user using the course_code we just created
+    try {
+      console.log(`Enrolling user ${userId} in course ${course_code} at university ${university_id}`);
+      await courseService.directEnrollUserToCourse(userId, course_code, university_id);
+      console.log("Enrollment successful");
+    } catch (enrollError) {
+      console.error('Error enrolling user to course:', enrollError);
+    }
+    
+    res.status(201).json({
+      message: 'Course created successfully',
+      course: newCourse
+    });
+  } catch (error) {
+    console.error('Error in createCourse controller:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   getCoursesByUniversity,
   getUserCourses,
   addUserToCourse,
-  removeUserFromCourse
+  removeUserFromCourse,
+  createCourse
 };

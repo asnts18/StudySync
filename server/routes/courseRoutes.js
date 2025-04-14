@@ -1,16 +1,17 @@
+// routes/courseRoutes.js
 const express = require('express');
 const router = express.Router();
 const courseController = require('../controllers/courseController');
-const auth = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth.middleware');
 
-// TODO 
 // Public routes
 router.get('/university/:universityId', courseController.getCoursesByUniversity);
 
-// TODO 
 // Protected routes
-router.get('/my-courses', auth, courseController.getUserCourses);
-router.post('/enroll', auth, courseController.addUserToCourse);
-router.delete('/unenroll/:courseId', auth, courseController.removeUserFromCourse);
+router.get('/my-courses', verifyToken, courseController.getUserCourses);
+router.post('/enroll', verifyToken, courseController.addUserToCourse);
+router.delete('/unenroll/:courseId', verifyToken, courseController.removeUserFromCourse);
+router.post('/create', verifyToken, courseController.createCourse);
+
 
 module.exports = router;
