@@ -1,3 +1,4 @@
+// api/studyGroupService.js
 import api from './axios';
 
 const studyGroupService = {
@@ -40,6 +41,12 @@ const studyGroupService = {
   // Get user's study groups
   getUserGroups: async () => {
     const response = await api.get('/study-groups/my-groups');
+    return response.data;
+  },
+  
+  // Get all tags
+  getTags: async () => {
+    const response = await api.get('/tags');
     return response.data;
   }
 };
