@@ -1,12 +1,23 @@
 // components/StudyGroupCard.jsx
 import React from 'react';
-import { Users, MapPin, Clock } from 'lucide-react';
+import { Users, MapPin, Clock, Star } from 'lucide-react';
 
-const StudyGroupCard = ({ group, onViewMore, showViewMoreButton = true, showJoinButton = true }) => (
+const StudyGroupCard = ({ 
+  group, 
+  onViewMore, 
+  showViewMoreButton = true, 
+  showJoinButton = true,
+  onJoinGroup
+}) => (
   <div className="border-2 border-black p-4 flex justify-between items-start gap-4">
     <div className="flex-1">
-      <div className="text-left mb-3">
+      <div className="text-left mb-3 flex items-center gap-2">
         <h3 className="text-xl font-semibold">{group.name}</h3>
+        {group.is_owner && (
+          <span className="flex items-center text-sm bg-primary-yellow px-2 py-1 border border-black">
+            <Star className="w-3 h-3 mr-1" /> Owner
+          </span>
+        )}
       </div>
 
       {/* Group details with reduced spacing */}
@@ -26,7 +37,7 @@ const StudyGroupCard = ({ group, onViewMore, showViewMoreButton = true, showJoin
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {group.tags.map((tag, index) => (
+        {group.tags && group.tags.map((tag, index) => (
           <span 
             key={index}
             className="px-3 py-1 border-2 border-black bg-light-orange text-black text-sm"
@@ -40,14 +51,17 @@ const StudyGroupCard = ({ group, onViewMore, showViewMoreButton = true, showJoin
     <div className="flex flex-col gap-2 flex-shrink-0">
       {showViewMoreButton && (
         <button 
-        onClick={() => onViewMore(group)}
-        className="px-4 py-2 border-2 border-black text-black hover:bg-gray-200 transition-colors"
-      >
-        View More
-      </button>
+          onClick={() => onViewMore(group)}
+          className="px-4 py-2 border-2 border-black text-black hover:bg-gray-200 transition-colors"
+        >
+          View More
+        </button>
       )}
-      {showJoinButton && (
-        <button className="px-4 py-2 border-2 border-black bg-primary-yellow text-black hover:bg-dark-yellow transition-colors">
+      {showJoinButton && !group.is_owner && (
+        <button 
+          onClick={() => onJoinGroup?.(group)}
+          className="px-4 py-2 border-2 border-black bg-primary-yellow text-black hover:bg-dark-yellow transition-colors"
+        >
           Join Group
         </button>
       )}

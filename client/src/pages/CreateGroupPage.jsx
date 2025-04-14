@@ -187,9 +187,22 @@ const CreateGroupPage = () => {
       
       // Call the API to create the study group
       const createdGroup = await studyGroupService.createGroup(studyGroupData);
+      console.log("Created group:", createdGroup);
       
-      // Navigate to the created group page
-      navigate('/created');
+      // Format the created group data to match what StudyGroupCard expects
+      const formattedGroup = {
+        name: createdGroup.name,
+        description: createdGroup.description,
+        currentMembers: 1, // The creator is the first member
+        maxMembers: createdGroup.max_capacity,
+        meetingTime: createdGroup.meeting_time,
+        location: createdGroup.location,
+        tags: createdGroup.tags || [],
+        study_group_id: createdGroup.study_group_id
+      };
+      
+      // Navigate to "My Groups" page with a success message about the new group
+      navigate('/my-groups', { state: { newGroupCreated: true, groupName: groupName } });
     } catch (error) {
       console.error("Error creating study group:", error);
       setError("Failed to create study group. Please try again.");
