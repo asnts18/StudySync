@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../config/db.config');
 
 // 1. Import the controller (we’ll create it next)
-const groupController = require('../controllers/studygroupController');
+const groupController = require('../controllers/studyGroupController');
 
 // 2. Import auth middleware to secure the route
 const auth = require('../middleware/auth.middleware'); 

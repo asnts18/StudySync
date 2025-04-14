@@ -1,3 +1,4 @@
+// api/courseService.js
 import api from './axios';
 
 const courseService = {
@@ -23,7 +24,14 @@ const courseService = {
   unenrollFromCourse: async (courseId) => {
     const response = await api.delete(`/courses/unenroll/${courseId}`);
     return response.data;
+  },
+
+    // Create a new course
+  createCourse: async (courseData) => {
+    const response = await api.post('/courses/create', courseData);
+    return response.data;
   }
+
 };
 
 export default courseService;

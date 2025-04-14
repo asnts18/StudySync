@@ -4,7 +4,9 @@ const morgan = require('morgan');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const universityRoutes = require('./routes/universityRoutes');
+const courseRoutes = require('./routes/courseRoutes');
 const studyGroupRoutes = require('./routes/studyGroupRoutes');
+const tagRoutes = require('./routes/tagRoutes'); 
 
 
 
@@ -23,7 +25,9 @@ app.use(morgan('dev'));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/universities', universityRoutes);
+app.use('/api/courses', courseRoutes);
 app.use('/api/study-groups', studyGroupRoutes);
+app.use('/api/tags', tagRoutes);
 
 
 // Basic route for testing

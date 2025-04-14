@@ -1,5 +1,4 @@
-// server/controllers/studygroupController.js
-
+// controllers/studyGroupController.js
 const groupService = require('../services/studygroupService');
 
 const createStudyGroup = async (req, res) => {
@@ -11,7 +10,10 @@ const createStudyGroup = async (req, res) => {
       course_code,
       university_id,
       max_capacity,
-      is_private
+      is_private,
+      tags,
+      location,
+      meeting_time
     } = req.body;
 
     const newGroup = await groupService.createStudyGroup({
@@ -21,7 +23,10 @@ const createStudyGroup = async (req, res) => {
       course_code,
       university_id,
       max_capacity,
-      is_private: is_private ? 1 : 0
+      is_private: is_private ? 1 : 0,
+      tags,
+      location,
+      meeting_time
     });
 
     res.status(201).json(newGroup);
@@ -31,7 +36,7 @@ const createStudyGroup = async (req, res) => {
   }
 };
 
-// fliter group listing and API
+// Filter group listing and API
 const listStudyGroups = async (req, res) => {
   try {
     // Retrieve filters from query parameters
@@ -39,7 +44,8 @@ const listStudyGroups = async (req, res) => {
       name: req.query.name,
       course_code: req.query.course_code,
       university_id: req.query.university_id,
-      is_private: req.query.is_private
+      is_private: req.query.is_private,
+      tag: req.query.tag
     };
 
     // Convert university_id to number (if provided)
