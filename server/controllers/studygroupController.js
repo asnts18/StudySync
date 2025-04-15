@@ -1,5 +1,5 @@
 // controllers/studyGroupController.js
-const groupService = require('../services/studyGroupService');
+const groupService = require('../services/studygroupService');
 
 const createStudyGroup = async (req, res) => {
   try {
@@ -98,9 +98,8 @@ const getGroupDetail = async (req, res) => {
 // Join a study group
 const joinStudyGroup = async (req, res) => {
   try {
-    const userId = req.userId;
-    const groupId = req.params.id;
-    
+    const userId = req.userId;         // Comes from auth middleware
+    const groupId = req.params.id;      // Extracted from URL parameter
     const result = await groupService.joinStudyGroup(userId, groupId);
     res.status(200).json(result);
   } catch (error) {
@@ -123,11 +122,40 @@ const leaveStudyGroup = async (req, res) => {
   }
 };
 
+// NEW: List all members of a study group
+const listMembers = async (req, res) => {
+  try {
+    const groupId = req.params.id;
+    const members = await groupService.listGroupMembers(groupId);
+    res.status(200).json(members);
+  } catch (error) {
+    console.error('Error listing group members:', error);
+    res.status(500).json({ message: 'Failed to list group members' });
+  }
+};
+// NEW: Remove a specific member from a study group
+const removeMember = async (req, res) => {
+  try {
+    const groupId = req.params.id;
+    const memberId = req.params.memberId;
+    const result = await groupService.removeGroupMember(groupId, memberId);
+    if (!result.success) {
+      return res.status(400).json({ message: result.message });
+    }
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error removing group member:', error);
+    res.status(500).json({ message: 'Failed to remove group member' });
+  }
+};
+
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
   getUserGroups,
   getGroupDetail,
   joinStudyGroup,
-  leaveStudyGroup
+  leaveStudyGroup,
+  listMembers,
+  removeMember
 };

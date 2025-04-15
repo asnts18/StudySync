@@ -267,68 +267,28 @@ const getUserStudyGroups = async (userId) => {
 };
 
 
-// Get a specific study group by ID
+// Get a specific study group by its ID
 const getStudyGroupById = async (groupId) => {
   try {
     const sql = `
       SELECT sg.*, 
-        (SELECT COUNT(*) FROM User_StudyGroup usg WHERE usg.study_group_id = sg.study_group_id) as current_members,
-        m.location,
-        CONCAT(
-          TIME_FORMAT(m.start_time, '%h:%i%p'), ' - ', 
-          TIME_FORMAT(m.end_time, '%h:%i%p')
-        ) as meeting_time
+        (SELECT COUNT(*) FROM User_StudyGroup usg WHERE usg.study_group_id = sg.study_group_id) as current_members
       FROM StudyGroup sg
-      LEFT JOIN Meeting m ON sg.study_group_id = m.study_group_id
       WHERE sg.study_group_id = ?
       LIMIT 1
     `;
-    
     const groups = await db.query(sql, [groupId]);
-    
-    if (groups.length === 0) {
-      return null;
-    }
-    
-    const group = groups[0];
-    
-    // Get all meetings for this group
-    const meetings = await db.query(
-      `SELECT meeting_id FROM Meeting WHERE study_group_id = ?`,
-      [groupId]
-    );
-    
-    // Collect all tag names for all meetings of this group
-    const tags = [];
-    for (const meeting of meetings) {
-      const meetingTags = await db.query(
-        `SELECT t.name 
-         FROM Tags t
-         JOIN Meeting_Tags mt ON t.tag_id = mt.tag_id
-         WHERE mt.meeting_id = ?`,
-        [meeting.meeting_id]
-      );
-      
-      meetingTags.forEach(tag => {
-        if (!tags.includes(tag.name)) {
-          tags.push(tag.name);
-        }
-      });
-    }
-    
-    group.tags = tags;
-    
-    return group;
+    return groups[0] || null;
   } catch (error) {
     console.error('DB error getting study group by ID:', error);
     throw error;
   }
 };
 
-// Join a study group
+// Join a study group with privacy logic
 const joinStudyGroup = async (userId, groupId) => {
   try {
-    // Check if group exists
+    // Fetch the study group record
     const group = await getStudyGroupById(groupId);
     if (!group) {
       throw new Error('Study group not found');
@@ -339,28 +299,37 @@ const joinStudyGroup = async (userId, groupId) => {
       'SELECT 1 FROM User_StudyGroup WHERE user_id = ? AND study_group_id = ?',
       [userId, groupId]
     );
-    
     if (existingMembership.length > 0) {
       return { success: false, message: 'User is already a member of this group' };
     }
     
-    // Check if group is full
+    // Check if the group is full
     if (group.current_members >= group.max_capacity) {
       return { success: false, message: 'Group is already at full capacity' };
     }
     
-    // Add user to group
-    await db.query(
-      'INSERT INTO User_StudyGroup (user_id, study_group_id) VALUES (?, ?)',
-      [userId, groupId]
-    );
-    
-    return { success: true, message: 'Successfully joined the study group' };
+    // Check the group's privacy setting:
+    if (group.is_private === 1 || group.is_private === true) {
+      // For a private group, insert a join request into GroupJoinRequests.
+      await db.query(
+        'INSERT INTO GroupJoinRequests (user_id, study_group_id) VALUES (?, ?)',
+        [userId, groupId]
+      );
+      return { success: true, message: 'Join request submitted successfully (private group).' };
+    } else {
+      // For a public group, add the user directly to User_StudyGroup.
+      await db.query(
+        'INSERT INTO User_StudyGroup (user_id, study_group_id) VALUES (?, ?)',
+        [userId, groupId]
+      );
+      return { success: true, message: 'Successfully joined the study group (public group).' };
+    }
   } catch (error) {
     console.error('DB error joining study group:', error);
     throw error;
   }
 };
+
 
 // Leave a study group
 const leaveStudyGroup = async (userId, groupId) => {
@@ -399,11 +368,56 @@ const leaveStudyGroup = async (userId, groupId) => {
   }
 };
 
+
+// List all members of a study group
+const listGroupMembers = async (studyGroupId) => {
+  try {
+    console.log('Fetching members for group ID:', studyGroupId);
+    const sql = `
+      SELECT u.user_id, u.email, u.first_name, u.last_name, u.bio, univ.name as university_name
+      FROM User_StudyGroup usg
+      JOIN User u ON usg.user_id = u.user_id
+      LEFT JOIN University univ ON u.university_id = univ.university_id
+      WHERE usg.study_group_id = ?
+    `;
+    const members = await db.query(sql, [studyGroupId]);
+    return members;
+  } catch (error) {
+    console.error('DB error listing group members:', error);
+    throw error;
+  }
+};
+
+// Remove a member from a study group
+const removeGroupMember = async (studyGroupId, memberId) => {
+  try {
+    // Check if the user is a member first
+    const membership = await db.query(
+      'SELECT 1 FROM User_StudyGroup WHERE study_group_id = ? AND user_id = ?',
+      [studyGroupId, memberId]
+    );
+    if (membership.length === 0) {
+      return { success: false, message: 'Member not found in this group' };
+    }
+    // Remove membership
+    await db.query(
+      'DELETE FROM User_StudyGroup WHERE study_group_id = ? AND user_id = ?',
+      [studyGroupId, memberId]
+    );
+    return { success: true, message: 'Member removed from the study group successfully' };
+  } catch (error) {
+    console.error('DB error removing group member:', error);
+    throw error;
+  }
+};
+
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
   getUserStudyGroups,
   getStudyGroupById,
   joinStudyGroup,
-  leaveStudyGroup
+  leaveStudyGroup,
+  listGroupMembers,
+  removeGroupMember
 };
