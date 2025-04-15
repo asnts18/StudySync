@@ -7,6 +7,7 @@ const universityRoutes = require('./routes/universityRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const studyGroupRoutes = require('./routes/studyGroupRoutes');
 const tagRoutes = require('./routes/tagRoutes'); 
+const meetingRoutes = require('./routes/meetingRoutes');
 
 
 
@@ -28,6 +29,7 @@ app.use('/api/universities', universityRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/study-groups', studyGroupRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/meetings', meetingRoutes); 
 
 
 // Basic route for testing
