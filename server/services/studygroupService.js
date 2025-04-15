@@ -7,10 +7,7 @@ const createStudyGroup = async ({
   course_code,
   university_id,
   max_capacity,
-  is_private,
-  tags,
-  location,
-  meeting_time
+  is_private
 }) => {
   try {
     // Create a connection to manage the transaction
@@ -20,11 +17,19 @@ const createStudyGroup = async ({
       // Start transaction
       await connection.beginTransaction();
       
+      // Validate max_capacity
+      const validatedCapacity = Math.min(Math.max(parseInt(max_capacity) || 8, 1), 8);
+      
+      // Set university_id default if not provided (should not happen due to NOT NULL constraint)
+      if (!university_id) {
+        throw new Error('university_id is required for study group creation');
+      }
+      
       // Insert study group
       const [groupResult] = await connection.execute(
         `INSERT INTO StudyGroup (name, description, owner_id, course_code, university_id, max_capacity, is_private)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [name, description, owner_id, course_code, university_id, max_capacity, is_private]
+        [name, description, owner_id, course_code, university_id, validatedCapacity, is_private === true ? 1 : 0]
       );
       
       const studyGroupId = groupResult.insertId;
@@ -35,67 +40,19 @@ const createStudyGroup = async ({
         [owner_id, studyGroupId]
       );
       
-      // Get current date for meeting
-      const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-      
-      // Create a meeting for the study group
-      // Note: We're creating a one-time meeting (is_recurring = false) with today's date as meeting_date
-      const [meetingResult] = await connection.execute(
-        `INSERT INTO Meeting (study_group_id, name, start_time, end_time, location, created_by, is_recurring, meeting_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [studyGroupId, `${name} Meeting`, '18:00:00', '20:00:00', location, owner_id, false, currentDate]
-      );
-      
-      const meetingId = meetingResult.insertId;
-      
-      // If tags are provided, add them to the meeting
-      if (tags && tags.length > 0) {
-        // Get tag IDs from tag names
-        for (const tagName of tags) {
-          // Get the tag ID
-          const [tagRows] = await connection.execute(
-            `SELECT tag_id FROM Tags WHERE name = ?`,
-            [tagName]
-          );
-          
-          if (tagRows.length > 0) {
-            const tagId = tagRows[0].tag_id;
-            
-            // Associate the tag with the meeting
-            await connection.execute(
-              `INSERT INTO Meeting_Tags (meeting_id, tag_id) VALUES (?, ?)`,
-              [meetingId, tagId]
-            );
-          }
-        }
-      }
-      
       // Commit the transaction
       await connection.commit();
       
-      // Fetch the newly created group with all its details
+      // Fetch the newly created group
       const [groupDetails] = await connection.execute(
-        `SELECT * FROM StudyGroup WHERE study_group_id = ?`,
+        `SELECT study_group_id, name, description, owner_id, course_code, university_id, 
+                max_capacity, is_private, created_at, updated_at
+         FROM StudyGroup 
+         WHERE study_group_id = ?`,
         [studyGroupId]
       );
       
-      // Get the tags associated with the meeting
-      const [meetingTags] = await connection.execute(
-        `SELECT t.name FROM Tags t
-         JOIN Meeting_Tags mt ON t.tag_id = mt.tag_id
-         WHERE mt.meeting_id = ?`,
-        [meetingId]
-      );
-      
-      const tagList = meetingTags.map(tag => tag.name);
-      
-      // Return the group details with tags
-      return {
-        ...groupDetails[0],
-        tags: tagList,
-        location,
-        meeting_time
-      };
+      return groupDetails[0];
     } catch (error) {
       // Rollback in case of error
       await connection.rollback();

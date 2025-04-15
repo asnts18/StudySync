@@ -58,8 +58,8 @@ CREATE TABLE StudyGroup (
     description TEXT,
     owner_id INT NOT NULL,
     course_code VARCHAR(20),
-    university_id INT,
-    max_capacity INT DEFAULT 8,
+    university_id INT NOT NULL,
+    max_capacity INT DEFAULT 8 NOT NULL,
     is_private BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -263,12 +263,12 @@ INSERT INTO GroupJoinRequests (user_id, study_group_id, request_date, status, re
 (4, 2, '2023-09-17 09:00:00', 'pending', NULL, NULL);  -- Diana requests to join MATH51 Warriors
 
 -- Insert Achievements
-INSERT INTO Achievements (name, description, icon_url, point_value, is_platform_default, group_id) VALUES
-('CS61A Completion', 'Awarded for completing all assignments in CS61A', 'https://example.com/cs61a_icon.png', 10, TRUE, NULL),  -- Platform-wide achievement
-('MATH51 Problem Solver', 'Awarded for solving 100+ MATH51 problems', 'https://example.com/math51_icon.png', 5, TRUE, NULL),  -- Platform-wide achievement
-('Algorithms Expert', 'Awarded for mastering algorithms concepts', 'https://example.com/algorithms_icon.png', 15, TRUE, NULL),  -- Platform-wide achievement
-('CS50 Contributor', 'Awarded for contributing significantly to CS50 study groups', 'https://example.com/cs50_contributor_icon.png', 8, FALSE, 4),  -- Group-specific achievement for CS50 Harvard group
-('Web Dev Master', 'Awarded for outstanding performance in INFO340', 'https://example.com/web_dev_icon.png', 12, FALSE, 5);  -- Group-specific achievement for Web Dev Masters group
+INSERT INTO Achievements (name, description, point_value, is_platform_default, group_id) VALUES
+('CS61A Completion', 'Awarded for completing all assignments in CS61A',  10, TRUE, NULL),  -- Platform-wide achievement
+('MATH51 Problem Solver', 'Awarded for solving 100+ MATH51 problems',  5, TRUE, NULL),  -- Platform-wide achievement
+('Algorithms Expert', 'Awarded for mastering algorithms concepts',  15, TRUE, NULL),  -- Platform-wide achievement
+('CS50 Contributor', 'Awarded for contributing significantly to CS50 study groups',  8, FALSE, 4),  -- Group-specific achievement for CS50 Harvard group
+('Web Dev Master', 'Awarded for outstanding performance in INFO340', 12, FALSE, 5);  -- Group-specific achievement for Web Dev Masters group
 
 -- Insert UserAchievements (many-to-many relationship between Users and Achievements)
 INSERT INTO UserAchievements (user_id, achievement_id, earned_date) VALUES
