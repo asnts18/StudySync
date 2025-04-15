@@ -1,5 +1,5 @@
 // controllers/studyGroupController.js
-const groupService = require('../services/studygroupService');
+const groupService = require('../services/studyGroupService');
 
 const createStudyGroup = async (req, res) => {
   try {
@@ -36,7 +36,7 @@ const createStudyGroup = async (req, res) => {
   }
 };
 
-// Filter group listing and API
+// Get all study groups with filters
 const listStudyGroups = async (req, res) => {
   try {
     // Retrieve filters from query parameters
@@ -66,4 +66,68 @@ const listStudyGroups = async (req, res) => {
   }
 };
 
-module.exports = { createStudyGroup, listStudyGroups };
+// Get user's study groups (both those they own and have joined)
+const getUserGroups = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const userGroups = await groupService.getUserStudyGroups(userId);
+    res.status(200).json(userGroups);
+  } catch (error) {
+    console.error('Error fetching user groups:', error);
+    res.status(500).json({ message: 'Failed to fetch user study groups' });
+  }
+};
+
+// Get details of a specific study group
+const getGroupDetail = async (req, res) => {
+  try {
+    const groupId = req.params.id;
+    const group = await groupService.getStudyGroupById(groupId);
+    
+    if (!group) {
+      return res.status(404).json({ message: 'Study group not found' });
+    }
+    
+    res.status(200).json(group);
+  } catch (error) {
+    console.error('Error fetching study group details:', error);
+    res.status(500).json({ message: 'Failed to fetch study group details' });
+  }
+};
+
+// Join a study group
+const joinStudyGroup = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const groupId = req.params.id;
+    
+    const result = await groupService.joinStudyGroup(userId, groupId);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error joining study group:', error);
+    res.status(500).json({ message: 'Failed to join study group' });
+  }
+};
+
+// Leave a study group
+const leaveStudyGroup = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const groupId = req.params.id;
+    
+    const result = await groupService.leaveStudyGroup(userId, groupId);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error leaving study group:', error);
+    res.status(500).json({ message: 'Failed to leave study group' });
+  }
+};
+
+module.exports = { 
+  createStudyGroup, 
+  listStudyGroups,
+  getUserGroups,
+  getGroupDetail,
+  joinStudyGroup,
+  leaveStudyGroup
+};

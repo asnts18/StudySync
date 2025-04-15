@@ -1,18 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db.config');
-
-// 1. Import the controller (we’ll create it next)
 const groupController = require('../controllers/studyGroupController');
+const auth = require('../middleware/auth.middleware');
 
-// 2. Import auth middleware to secure the route
-const auth = require('../middleware/auth.middleware'); 
-// Adjust the path if your file is named differently (e.g. 'auth.js' or 'authMiddleware.js').
-
-// 3. Define the POST route for creating a study group
+// Protected routes - require authentication
 router.post('/', auth.verifyToken, groupController.createStudyGroup);
+router.get('/my-groups', auth.verifyToken, groupController.getUserGroups); // This needs to come BEFORE the '/:id' route
 
-// GET endpoint to list/filter study groups
+// Public routes
 router.get('/', groupController.listStudyGroups);
+router.get('/:id', groupController.getGroupDetail);
+router.post('/:id/join', auth.verifyToken, groupController.joinStudyGroup);
+router.delete('/:id/members', auth.verifyToken, groupController.leaveStudyGroup);
 
 module.exports = router;

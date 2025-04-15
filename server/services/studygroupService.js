@@ -35,11 +35,15 @@ const createStudyGroup = async ({
         [owner_id, studyGroupId]
       );
       
+      // Get current date for meeting
+      const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      
       // Create a meeting for the study group
+      // Note: We're creating a one-time meeting (is_recurring = false) with today's date as meeting_date
       const [meetingResult] = await connection.execute(
-        `INSERT INTO Meeting (study_group_id, name, start_time, end_time, location, created_by, is_recurring)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [studyGroupId, `${name} Meeting`, '18:00:00', '20:00:00', location, owner_id, false]
+        `INSERT INTO Meeting (study_group_id, name, start_time, end_time, location, created_by, is_recurring, meeting_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [studyGroupId, `${name} Meeting`, '18:00:00', '20:00:00', location, owner_id, false, currentDate]
       );
       
       const meetingId = meetingResult.insertId;
@@ -106,7 +110,7 @@ const createStudyGroup = async ({
   }
 };
 
-// group listing and filtering API
+// Group listing and filtering API
 const listStudyGroups = async (filters) => {
   try {
     let sql = `
@@ -195,4 +199,211 @@ const listStudyGroups = async (filters) => {
   }
 };
 
-module.exports = { createStudyGroup, listStudyGroups };
+// Get user's study groups (both owned and joined)
+const getUserStudyGroups = async (userId) => {
+  try {
+    const sql = `
+      SELECT 
+        sg.*,
+        (SELECT COUNT(*) FROM User_StudyGroup usg WHERE usg.study_group_id = sg.study_group_id) as current_members,
+        sg.owner_id = ? as is_owner,
+        m.location,
+        m.start_time,
+        m.end_time,
+        CONCAT(
+          TIME_FORMAT(m.start_time, '%h:%i%p'), ' - ', 
+          TIME_FORMAT(m.end_time, '%h:%i%p')
+        ) as meeting_time
+      FROM StudyGroup sg
+      JOIN User_StudyGroup usg ON sg.study_group_id = usg.study_group_id
+      LEFT JOIN (
+        SELECT study_group_id, location, start_time, end_time
+        FROM Meeting
+        WHERE meeting_id IN (
+          SELECT MIN(meeting_id) 
+          FROM Meeting 
+          GROUP BY study_group_id
+        )
+      ) m ON sg.study_group_id = m.study_group_id
+      WHERE usg.user_id = ?
+    `;
+    
+    const groups = await db.query(sql, [userId, userId]);
+    
+    // For each group, fetch associated tags
+    for (const group of groups) {
+      // Get all meetings for this group
+      const meetings = await db.query(
+        `SELECT meeting_id FROM Meeting WHERE study_group_id = ?`,
+        [group.study_group_id]
+      );
+      
+      // Collect all tag names for all meetings of this group
+      const tags = [];
+      for (const meeting of meetings) {
+        const meetingTags = await db.query(
+          `SELECT t.name 
+           FROM Tags t
+           JOIN Meeting_Tags mt ON t.tag_id = mt.tag_id
+           WHERE mt.meeting_id = ?`,
+          [meeting.meeting_id]
+        );
+        
+        meetingTags.forEach(tag => {
+          if (!tags.includes(tag.name)) {
+            tags.push(tag.name);
+          }
+        });
+      }
+      
+      group.tags = tags;
+    }
+    
+    return groups;
+  } catch (error) {
+    console.error('DB error getting user study groups:', error);
+    throw error;
+  }
+};
+
+
+// Get a specific study group by ID
+const getStudyGroupById = async (groupId) => {
+  try {
+    const sql = `
+      SELECT sg.*, 
+        (SELECT COUNT(*) FROM User_StudyGroup usg WHERE usg.study_group_id = sg.study_group_id) as current_members,
+        m.location,
+        CONCAT(
+          TIME_FORMAT(m.start_time, '%h:%i%p'), ' - ', 
+          TIME_FORMAT(m.end_time, '%h:%i%p')
+        ) as meeting_time
+      FROM StudyGroup sg
+      LEFT JOIN Meeting m ON sg.study_group_id = m.study_group_id
+      WHERE sg.study_group_id = ?
+      LIMIT 1
+    `;
+    
+    const groups = await db.query(sql, [groupId]);
+    
+    if (groups.length === 0) {
+      return null;
+    }
+    
+    const group = groups[0];
+    
+    // Get all meetings for this group
+    const meetings = await db.query(
+      `SELECT meeting_id FROM Meeting WHERE study_group_id = ?`,
+      [groupId]
+    );
+    
+    // Collect all tag names for all meetings of this group
+    const tags = [];
+    for (const meeting of meetings) {
+      const meetingTags = await db.query(
+        `SELECT t.name 
+         FROM Tags t
+         JOIN Meeting_Tags mt ON t.tag_id = mt.tag_id
+         WHERE mt.meeting_id = ?`,
+        [meeting.meeting_id]
+      );
+      
+      meetingTags.forEach(tag => {
+        if (!tags.includes(tag.name)) {
+          tags.push(tag.name);
+        }
+      });
+    }
+    
+    group.tags = tags;
+    
+    return group;
+  } catch (error) {
+    console.error('DB error getting study group by ID:', error);
+    throw error;
+  }
+};
+
+// Join a study group
+const joinStudyGroup = async (userId, groupId) => {
+  try {
+    // Check if group exists
+    const group = await getStudyGroupById(groupId);
+    if (!group) {
+      throw new Error('Study group not found');
+    }
+    
+    // Check if user is already a member
+    const existingMembership = await db.query(
+      'SELECT 1 FROM User_StudyGroup WHERE user_id = ? AND study_group_id = ?',
+      [userId, groupId]
+    );
+    
+    if (existingMembership.length > 0) {
+      return { success: false, message: 'User is already a member of this group' };
+    }
+    
+    // Check if group is full
+    if (group.current_members >= group.max_capacity) {
+      return { success: false, message: 'Group is already at full capacity' };
+    }
+    
+    // Add user to group
+    await db.query(
+      'INSERT INTO User_StudyGroup (user_id, study_group_id) VALUES (?, ?)',
+      [userId, groupId]
+    );
+    
+    return { success: true, message: 'Successfully joined the study group' };
+  } catch (error) {
+    console.error('DB error joining study group:', error);
+    throw error;
+  }
+};
+
+// Leave a study group
+const leaveStudyGroup = async (userId, groupId) => {
+  try {
+    // Check if group exists
+    const group = await getStudyGroupById(groupId);
+    if (!group) {
+      throw new Error('Study group not found');
+    }
+    
+    // Check if user is a member
+    const existingMembership = await db.query(
+      'SELECT 1 FROM User_StudyGroup WHERE user_id = ? AND study_group_id = ?',
+      [userId, groupId]
+    );
+    
+    if (existingMembership.length === 0) {
+      return { success: false, message: 'User is not a member of this group' };
+    }
+    
+    // Check if user is the owner
+    if (group.owner_id === userId) {
+      return { success: false, message: 'Group owner cannot leave the group. Consider deleting the group instead.' };
+    }
+    
+    // Remove user from group
+    await db.query(
+      'DELETE FROM User_StudyGroup WHERE user_id = ? AND study_group_id = ?',
+      [userId, groupId]
+    );
+    
+    return { success: true, message: 'Successfully left the study group' };
+  } catch (error) {
+    console.error('DB error leaving study group:', error);
+    throw error;
+  }
+};
+
+module.exports = { 
+  createStudyGroup, 
+  listStudyGroups,
+  getUserStudyGroups,
+  getStudyGroupById,
+  joinStudyGroup,
+  leaveStudyGroup
+};
