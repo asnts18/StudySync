@@ -60,10 +60,38 @@ const getCompleteProfile = async (req, res) => {
     }
   };
   
+  // New: Delete account endpoint
+const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.userId; // Attached by your auth middleware
+
+    // Optionally, verify the user exists
+    const [existingUser] = await db.query(
+      'SELECT user_id FROM User WHERE user_id = ?',
+      [userId]
+    );
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete the user record (assuming foreign keys are set to cascade)
+    await db.query(
+      'DELETE FROM User WHERE user_id = ?',
+      [userId]
+    );
+
+    res.status(200).json({ message: 'User account deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting user account:', error);
+    res.status(500).json({ message: 'Failed to delete user account' });
+  }
+};
+
 
 module.exports = {
   getProfile,
   updateProfile,
   getProfileWithAchievements,
-  getCompleteProfile
+  getCompleteProfile,
+  deleteAccount
 };
