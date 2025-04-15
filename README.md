@@ -1,72 +1,107 @@
-# **StudySync – Find the Right Study Buddy**  
-📚 **Helping College Students Overcome Social Barriers & Build Study Groups**  
+# StudySync
 
-## **🚀 Overview**  
-**StudySync** is a web-based platform designed to help college students—especially those with **social anxiety, shyness, or who are new to campus**—find **study partners and accountability groups** in their classes. Our goal is to create a **seamless and stress-free way** to connect students based on learning styles, study habits, and academic goals.
+Team members: Abegail Santos and Navaneeth Maruthi
 
-## **🎯 Problem Statement**  
-Many students struggle to find **study partners**—especially when they feel like **everyone already knows each other**. This leads to:  
-- **Lack of academic support**  
-- **Increased isolation**  
-- **Difficulty staying accountable**  
-- **Missed opportunities for collaboration and learning**  
+## 📚 About the Application
+StudySync is a web-based platform designed to help college students—especially those with social anxiety, shyness, or who are new to campus—find study partners and accountability groups in their classes. Our goal is to create a seamless and stress-free way to connect students based on learning styles, study habits, and academic goals.
 
-## **💡 Solution: StudySync**  
-**StudySync** helps students find **compatible study partners** by:  
-✅ Matching them by **class, study style, and goals**  
-✅ Enabling **group formation** with **custom preferences**  
-✅ Providing **accountability features** to keep students on track  
+## 💻 Tech Stack
 
-## **💻 Technologies**  
-- **UI/UX Design**: Figma, FigJam
-- **Engineering**:React, Tailwind CSS, Lucide
-- **AI tools**: ChatGPT, Claude
+### Frontend:
+- React.js (v18.2.0)
+- React Router (v6.15.0)
+- Tailwind CSS (v3.3.3)
+- Lucide React (v0.263.1)
 
-## **🎯 Key Features**  
+### Backend:
+- Node.js (v18.x)
+- Express.js (v4.18.2)
+- MySQL (v8.0)
+- JWT for authentication
+- Bcrypt.js for password hashing
 
-### **👤 Profile & Matching**  
-🔹 Create a profile with **school, classes, study preferences, and learning style**  
-🔹 Match with **students in the same course** based on study habits  
-🔹 Customize your **group study style** (quiet, discussion-based, structured)  
+## 🛠 How to Run the Application
 
-### **📚 Study Group Formation**  
-🔹 Join or create a **study group** (2-5 people)  
-🔹 No profile pictures to **reduce bias**, only **bios and study tags**  
-🔹 Two options:  
-   - **Join a group** looking for members  
-   - **Create a group** and find the right fit  
+### Prerequisites
+- Node.js (v18.x or later)
+- MySQL (v8.0 or later)
+- npm (v9.x or later)
 
-### **🛠 Accountability & Study Tools**  
-🔹 **Daily/Weekly Check-ins** – Track progress, set milestones  
-🔹 **Hardcore Mode** – Adds fun consequences for missed study goals  
-🔹 **Built-in scheduling** – Helps coordinate meeting times easily  
-🔹 **Study Challenges** – Earn badges for completing tasks with study partners  
+### Backend Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/studysync.git
+   cd studysync
+   ```
 
-### **🔍 Find Study Buddies with Filters**  
-🔹 Filter matches by:  
-   - **Major, course, or academic goals**  
-   - **Preferred study environment (library, café, virtual, dorm)**  
-   - **Availability & commitment level**  
+2. Install backend dependencies:
+   ```bash
+   cd server
+   npm install
+   ```
 
-### **💬 Communication & Messaging**  
-🔹 Group chats for easy coordination  
-🔹 Direct messaging for one-on-one study sessions  
-🔹 Community guidelines to ensure **respectful and productive** interactions  
+3. Set up the database:
+   ```bash
+   # Log into MySQL
+   mysql -u root -p
 
-## **🔬 User Research Insights**  
-We interviewed **college students** and found that:  
-✅ Most students prefer **finding study partners organically** but **struggle with scheduling & accountability**  
-✅ Students value **structured study groups** with **clear goals & commitment levels**  
-✅ Social anxiety & shyness **make it difficult** to initiate study partnerships  
-✅ **Professors facilitating study group sign-ups** could help encourage participation  
+   # Create database and tables
+   mysql> source ./database/studysync_schema.sql
 
-## **🌟 Why StudySync?**  
-- **💡 Reduces Social Barriers** – Helps shy/anxious students connect  
-- **📖 Enhances Learning** – Encourages **consistent, focused study habits**  
-- **🤝 Builds Friendships** – Supports **long-term study partnerships**  
-- **⏳ Saves Time** – Matches students **efficiently & effectively**  
+   # Import sample data
+   mysql> source ./database/studysync_dbprog.sql
+   ```
 
-## **🔜 Future Enhancements**  
-🚀 **AI-Driven Matching** – More intelligent pairing based on behavioral insights  
-📆 **Integrated Calendar Sync** – Auto-schedule study sessions with Google Calendar  
-🏆 **Gamification** – Leaderboards & streaks to encourage consistency  
+4. Configure environment variables:
+   Create a `.env` file in the server directory with the following variables:
+   ```
+   PORT=5001
+   DB_HOST=localhost
+   DB_USER=yourusername
+   DB_PASSWORD=yourpassword
+   DB_NAME=studysync
+   JWT_SECRET=your_jwt_secret_key
+   ```
+
+5. Start the backend server:
+   ```bash
+   npm run dev
+   ```
+   The server will run on http://localhost:5001
+
+### Frontend Setup
+1. Navigate to the client directory:
+   ```bash
+   cd ../client
+   ```
+
+2. Install frontend dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure the API endpoint:
+   Create a `.env` file in the client directory with:
+   ```
+   REACT_APP_API_URL=http://localhost:5001/api
+   ```
+
+4. Start the frontend development server:
+   ```bash
+   npm run dev
+   ```
+   The application will open in your browser at http://localhost:3000
+
+## Environment Variables
+The application requires several environment variables to function properly:
+
+### Backend (.env)
+- `PORT`: The port on which the server will run (default: 5001)
+- `DB_HOST`: MySQL database host (default: localhost)
+- `DB_USER`: MySQL username
+- `DB_PASSWORD`: MySQL password
+- `DB_NAME`: Database name (default: studysync)
+- `JWT_SECRET`: Secret key for JWT token generation and validation
+
+### Frontend (.env)
+- `REACT_APP_API_URL`: URL of the backend API
