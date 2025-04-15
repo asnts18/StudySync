@@ -5,7 +5,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import JoinGroupPage from './pages/JoinGroupPage';
 import CreateGroupPage from './pages/CreateGroupPage';
-import CreatedGroupPage from './pages/CreatedGroupPage';
+import MyGroupsPage from './pages/MyGroupsPage';
 import ProfilePage from './pages/ProfilePage'; 
 import ProfileEditPage from './pages/ProfileEditPage';
 import Header from './components/Header';  
@@ -50,9 +50,9 @@ function App() {
                   <CreateGroupPage />
                 </ProtectedRoute>
               } />
-              <Route path="/created" element={
+              <Route path="/my-groups" element={
                 <ProtectedRoute>
-                  <CreatedGroupPage />
+                  <MyGroupsPage />
                 </ProtectedRoute>
               } />
               {/* Profile routes */}

@@ -4,50 +4,90 @@ import api from './axios';
 const studyGroupService = {
   // Get all study groups (with optional filters)
   getAllGroups: async (filters = {}) => {
-    const response = await api.get('/study-groups', { params: filters });
-    return response.data;
+    try {
+      const response = await api.get('/study-groups', { params: filters });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching all groups:', error);
+      throw error;
+    }
   },
 
   // Get a specific study group by ID
   getGroupById: async (groupId) => {
-    const response = await api.get(`/study-groups/${groupId}`);
-    return response.data;
+    try {
+      const response = await api.get(`/study-groups/${groupId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching group by ID:', error);
+      throw error;
+    }
   },
 
   // Create a new study group
   createGroup: async (groupData) => {
-    const response = await api.post('/study-groups', groupData);
-    return response.data;
+    try {
+      const response = await api.post('/study-groups', groupData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating study group:', error);
+      throw error;
+    }
   },
 
   // Update a study group
   updateGroup: async (groupId, groupData) => {
-    const response = await api.put(`/study-groups/${groupId}`, groupData);
-    return response.data;
+    try {
+      const response = await api.put(`/study-groups/${groupId}`, groupData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating group:', error);
+      throw error;
+    }
   },
 
   // Join a study group
   joinGroup: async (groupId) => {
-    const response = await api.post(`/study-groups/${groupId}/join`);
-    return response.data;
+    try {
+      const response = await api.post(`/study-groups/${groupId}/join`);
+      return response.data;
+    } catch (error) {
+      console.error('Error joining group:', error);
+      throw error;
+    }
   },
 
   // Leave a study group
   leaveGroup: async (groupId) => {
-    const response = await api.delete(`/study-groups/${groupId}/members`);
-    return response.data;
+    try {
+      const response = await api.delete(`/study-groups/${groupId}/members`);
+      return response.data;
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      throw error;
+    }
   },
 
-  // Get user's study groups
+  // Get user's study groups (both owned and joined)
   getUserGroups: async () => {
-    const response = await api.get('/study-groups/my-groups');
-    return response.data;
+    try {
+      const response = await api.get('/study-groups/my-groups');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user groups:', error);
+      throw error;
+    }
   },
   
   // Get all tags
   getTags: async () => {
-    const response = await api.get('/tags');
-    return response.data;
+    try {
+      const response = await api.get('/tags');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+      throw error;
+    }
   }
 };
 
