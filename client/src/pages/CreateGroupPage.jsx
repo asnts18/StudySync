@@ -19,6 +19,7 @@ const CreateGroupPage = () => {
   const [meetingTime, setMeetingTime] = useState("");
   const [repeating, setRepeating] = useState("none");
   const [groupName, setGroupName] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false); // New state for privacy setting
   
   // Course-related state
   const [courses, setCourses] = useState([]);
@@ -142,29 +143,18 @@ const CreateGroupPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+     // Name validation
     if (!groupName) {
       alert("Please provide a group name");
       return;
     }
-    
-    if (selectedDays.length === 0) {
-      alert("Please select at least one meeting day");
-      return;
-    }
-    
-    if (!meetingTime) {
-      alert("Please select a meeting time");
-      return;
-    }
-    
-    if (!location) {
-      alert("Please provide a meeting location");
-      return;
-    }
-    
-    // Format meeting days and time
-    const formattedMeetingDays = selectedDays.map(day => day.substring(0, 3)).join('/');
-    const formattedTime = formatTime(meetingTime);
+
+    // Max capacity validation
+    const maxCapacity = parseInt(groupSize);
+    if (isNaN(maxCapacity) || maxCapacity < 1 || maxCapacity > 8) {
+      alert("Group size must be between 1 and 8 members");
+    return;
+  }
     
     // Create study group data object
     const studyGroupData = {
@@ -173,10 +163,7 @@ const CreateGroupPage = () => {
       course_code: selectedCourse || null,
       university_id: currentUser.university_id,
       max_capacity: parseInt(groupSize),
-      is_private: false,
-      tags: selectedTags, // Send selected tags to the backend
-      location: location,
-      meeting_time: `${formattedMeetingDays} ${formattedTime}`
+      is_private: isPrivate,
     };
     
     console.log("Creating study group:", studyGroupData);
@@ -189,18 +176,6 @@ const CreateGroupPage = () => {
       const createdGroup = await studyGroupService.createGroup(studyGroupData);
       console.log("Created group:", createdGroup);
       
-      // Format the created group data to match what StudyGroupCard expects
-      const formattedGroup = {
-        name: createdGroup.name,
-        description: createdGroup.description,
-        currentMembers: 1, // The creator is the first member
-        maxMembers: createdGroup.max_capacity,
-        meetingTime: createdGroup.meeting_time,
-        location: createdGroup.location,
-        tags: createdGroup.tags || [],
-        study_group_id: createdGroup.study_group_id
-      };
-      
       // Navigate to "My Groups" page with a success message about the new group
       navigate('/my-groups', { state: { newGroupCreated: true, groupName: groupName } });
     } catch (error) {
@@ -209,15 +184,6 @@ const CreateGroupPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-  
-  // Helper function to format time for display (e.g., "14:30" to "2:30pm")
-  const formatTime = (timeString) => {
-    const [hours, minutes] = timeString.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'pm' : 'am';
-    const formattedHour = hour % 12 || 12;
-    return `${formattedHour}:${minutes}${ampm}`;
   };
 
   return (
@@ -366,81 +332,6 @@ const CreateGroupPage = () => {
             )}
           </div>
 
-          {/* Tags Section */}
-          <div className="space-y-4 w-full">
-            <label className="block text-lg text-left">What tags would you like to include?</label>
-            {isLoading ? (
-              <p>Loading tags...</p>
-            ) : (
-              <div className="flex flex-wrap gap-3">
-                {availableTags.map((tag) => (
-                  <button
-                    key={tag.tag_id}
-                    type="button"
-                    onClick={() => handleTagClick(tag)}
-                    className={`px-6 py-2 border-2 border-black rounded-full transition-colors ${
-                      selectedTags.includes(tag.name) ? "bg-primary-yellow" : "bg-white hover:bg-gray-100"
-                    }`}
-                  >
-                    {tag.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Days and Times to Meet Section */}
-          <div className="space-y-4 w-full flex flex-col items-start">
-            <label className="block text-lg text-left">Days and times to meet</label>
-            <div className="flex flex-wrap gap-3">
-              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => setSelectedDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day])}
-                  className={`px-6 py-2 border-2 border-black rounded-full transition-colors ${
-                    selectedDays.includes(day) ? "bg-primary-yellow" : "bg-white hover:bg-gray-100"
-                  }`}
-                >
-                  {day}
-                </button>
-              ))}
-            </div>
-            <input
-              type="time"
-              value={meetingTime}
-              onChange={(e) => setMeetingTime(e.target.value)}
-              className="w-48 p-4 border-2 border-black focus:outline-none bg-white"
-            />
-          </div>
-
-          {/* Repeating Section */}
-          <div className="space-y-4 w-full flex flex-col items-start">
-            <label className="block text-lg text-left">Repeating?</label>
-            <select
-              value={repeating}
-              onChange={(e) => setRepeating(e.target.value)}
-              className="w-48 p-4 border-2 border-black focus:outline-none appearance-none bg-white"
-            >
-              <option value="none">Not repeating</option>
-              <option value="weekly">Weekly</option>
-              <option value="biweekly">Biweekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-          </div>
-
-          {/* Location Section */}
-          <div className="space-y-4 w-full">
-            <label className="block text-lg text-left">Where will you be holding your study session?</label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Tisch Library, Room 123D"
-              className="w-full p-4 border-2 border-black focus:outline-none"
-            />
-          </div>
-
           {/* Group Size Section */}
           <div className="space-y-4 flex flex-col items-start">
             <label className="block text-lg text-left">How many people are you looking for total?</label>
@@ -455,6 +346,36 @@ const CreateGroupPage = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Privacy Setting Section */}
+          <div className="space-y-4 flex flex-col items-start">
+            <label className="block text-lg text-left">Group privacy</label>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setIsPrivate(false)}
+                className={`px-6 py-2 border-2 border-black rounded-full transition-colors ${
+                  !isPrivate ? "bg-primary-yellow" : "bg-white hover:bg-gray-100"
+                }`}
+              >
+                Public
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPrivate(true)}
+                className={`px-6 py-2 border-2 border-black rounded-full transition-colors ${
+                  isPrivate ? "bg-primary-yellow" : "bg-white hover:bg-gray-100"
+                }`}
+              >
+                Private
+              </button>
+            </div>
+            <p className="text-sm text-gray-500">
+              {isPrivate 
+                ? "Private: People need to request to join your group" 
+                : "Public: Anyone can join your group without approval"}
+            </p>
           </div>
 
           {/* Additional Info Section */}
