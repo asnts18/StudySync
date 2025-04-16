@@ -137,17 +137,14 @@ CREATE TABLE Achievements (
     achievement_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    point_value INT DEFAULT 0,
-    is_platform_default BOOLEAN DEFAULT TRUE,  -- Determines if it's a platform-wide achievement
-    group_id INT,                  -- Can be NULL for platform-wide achievements, or tied to a specific group
-    FOREIGN KEY (group_id) REFERENCES StudyGroup(study_group_id) ON DELETE CASCADE
+    is_platform_default BOOLEAN DEFAULT TRUE,
+    group_id INT
 );
 
 -- Create UserAchievements junction table (many-to-many)
 CREATE TABLE UserAchievements (
     user_id INT,
     achievement_id INT,
-    earned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, achievement_id),
     FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
     FOREIGN KEY (achievement_id) REFERENCES Achievements(achievement_id) ON DELETE CASCADE
@@ -263,19 +260,14 @@ INSERT INTO GroupJoinRequests (user_id, study_group_id, request_date, status, re
 (4, 2, '2023-09-17 09:00:00', 'pending', NULL, NULL);  -- Diana requests to join MATH51 Warriors
 
 -- Insert Achievements
-INSERT INTO Achievements (name, description, point_value, is_platform_default, group_id) VALUES
-('CS61A Completion', 'Awarded for completing all assignments in CS61A',  10, TRUE, NULL),  -- Platform-wide achievement
-('MATH51 Problem Solver', 'Awarded for solving 100+ MATH51 problems',  5, TRUE, NULL),  -- Platform-wide achievement
-('Algorithms Expert', 'Awarded for mastering algorithms concepts',  15, TRUE, NULL),  -- Platform-wide achievement
-('CS50 Contributor', 'Awarded for contributing significantly to CS50 study groups',  8, FALSE, 4),  -- Group-specific achievement for CS50 Harvard group
-('Web Dev Master', 'Awarded for outstanding performance in INFO340', 12, FALSE, 5);  -- Group-specific achievement for Web Dev Masters group
+INSERT INTO Achievements (name, description, is_platform_dependent) VALUES
+('Social Butterfly', 'Awarded for completing all assignments in CS61A', TRUE),
+('Most Consistent', 'Awarded for solving 100+ MATH51 problems', TRUE);
 
 -- Insert UserAchievements (many-to-many relationship between Users and Achievements)
-INSERT INTO UserAchievements (user_id, achievement_id, earned_date) VALUES
-(1, 1, '2023-12-01 10:00:00'),  -- Alice earns CS61A Completion
-(2, 2, '2023-11-25 15:30:00'),  -- Bob earns MATH51 Problem Solver
-(3, 3, '2023-11-20 17:45:00'),  -- Charlie earns Algorithms Expert
-(4, 4, '2023-11-10 13:00:00'),  -- Diana earns CS50 Contributor
-(5, 5, '2023-11-30 09:00:00');  -- Evan earns Web Dev Master
+INSERT INTO UserAchievements (user_id, achievement_id) VALUES
+(1, 1), 
+(2, 2), 
+(3, 3);
 
 
