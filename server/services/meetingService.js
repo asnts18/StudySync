@@ -52,16 +52,15 @@ const createMeeting = async (meetingData) => {
   }
 };
 
-// Service for listing all meetings (optional)
-const listMeetings = async () => {
+const getGroupMeetings = async (groupId) => {
   try {
-    const sql = 'SELECT * FROM Meeting';
-    const meetings = await db.query(sql);
+    const sql = 'SELECT * FROM Meeting WHERE study_group_id = ?';
+    const meetings = await db.query(sql, [groupId]);
     return meetings;
   } catch (error) {
-    console.error("DB error listing meetings:", error);
+    console.error("DB error fetching group meetings:", error);
     throw error;
   }
 };
 
-module.exports = { createMeeting, listMeetings };
+module.exports = { createMeeting, getGroupMeetings };
