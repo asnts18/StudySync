@@ -195,12 +195,34 @@ const updateStudyGroup = async (req, res) => {
   }
 };
 
+const deleteStudyGroup = async (req, res) => {
+  try {
+    const userId = req.userId; // From auth middleware
+    const groupId = req.params.id;
+    
+    const result = await groupService.deleteStudyGroup(groupId, userId);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error deleting study group:', error);
+    
+    // Check for specific error types
+    if (error.message === 'Study group not found') {
+      return res.status(404).json({ message: 'Study group not found' });
+    } else if (error.message === 'Only the owner can delete the group') {
+      return res.status(403).json({ message: 'Only the owner can delete this group' });
+    }
+    
+    res.status(500).json({ message: 'Failed to delete study group' });
+  }
+};
+
 // TODO: Delete study group 
 
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
   updateStudyGroup,
+  deleteStudyGroup,
   getUniversityGroups,
   getUserGroups,
   getGroupDetail,

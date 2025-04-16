@@ -106,6 +106,36 @@ const updateStudyGroup = async (groupId, userId, updateData) => {
   }
 };
 
+const deleteStudyGroup = async (groupId, userId) => {
+  try {
+    // First verify that the user is the owner of the group
+    const ownerCheck = await db.query(
+      'SELECT owner_id FROM StudyGroup WHERE study_group_id = ?',
+      [groupId]
+    );
+    
+    if (!ownerCheck || ownerCheck.length === 0) {
+      throw new Error('Study group not found');
+    }
+    
+    if (ownerCheck[0].owner_id !== userId) {
+      throw new Error('Only the owner can delete the group');
+    }
+    
+    // Delete the group
+    // Note: Assuming cascade delete is set up in the database for related records
+    const result = await db.query(
+      'DELETE FROM StudyGroup WHERE study_group_id = ?',
+      [groupId]
+    );
+    
+    return { success: true, message: 'Study group deleted successfully' };
+  } catch (error) {
+    console.error('DB error deleting study group:', error);
+    throw error;
+  }
+};
+
 // Group listing and filtering API
 const listStudyGroups = async (filters) => {
   try {
@@ -467,6 +497,7 @@ module.exports = {
   getStudyGroupsByUniversity,
   getStudyGroupById,
   updateStudyGroup,
+  deleteStudyGroup,
   joinStudyGroup,
   leaveStudyGroup,
   listGroupMembers,

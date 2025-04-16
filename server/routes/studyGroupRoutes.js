@@ -7,6 +7,8 @@ const auth = require('../middleware/auth.middleware');
 router.post('/', auth.verifyToken, groupController.createStudyGroup);
 router.get('/my-groups', auth.verifyToken, groupController.getUserGroups); 
 router.put('/:groupId', auth.verifyToken, groupController.updateStudyGroup); 
+router.delete('/:id', auth.verifyToken, groupController.deleteStudyGroup);
+
 
 router.get('/', groupController.listStudyGroups);
 router.get('/university/:universityId', groupController.getUniversityGroups);
