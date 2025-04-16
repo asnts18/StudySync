@@ -150,6 +150,14 @@ CREATE TABLE UserAchievements (
     FOREIGN KEY (achievement_id) REFERENCES Achievements(achievement_id) ON DELETE CASCADE
 );
 
+CREATE TABLE Notifications (
+  notification_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+);
+
 
 -- Notes: 
 -- Make sure to create relationships between tables using Foreign Keys 
@@ -161,6 +169,18 @@ CREATE TABLE UserAchievements (
 -- INSERT STATEMENTS FOR INITIAL DATA
 -- --------------------------------------------------------------------
 
+INSERT INTO Notifications (user_id, message) 
+VALUES 
+    (1, 'Your account has been successfully created.'),
+    (2, 'Your profile was updated successfully.'),
+    (3, 'You have a new message from the admin.'),
+    (4, 'Your subscription is about to expire. Please renew soon.'),
+    (5, 'You have a new friend request.');
+        INSERT INTO Notifications (user_id, message) 
+VALUES 
+    (6, 'Your account has been successfully created.'),
+    (7, 'Your profile was updated successfully.'),
+    (8, 'You have a new friend request.');
 -- Insert Universities
 INSERT INTO University (name, location) VALUES
 ('University of California, Berkeley', 'Berkeley, CA'),
