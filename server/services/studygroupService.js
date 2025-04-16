@@ -411,6 +411,29 @@ const removeGroupMember = async (studyGroupId, memberId) => {
   }
 };
 
+const requestJoinGroup = async ({ study_group_id, user_id }) => {
+  try {
+    // Check if a request already exists to avoid duplicates:
+    const existingRequest = await db.query(
+      'SELECT * FROM GroupJoinRequests WHERE study_group_id = ? AND user_id = ?',
+      [study_group_id, user_id]
+    );
+    if (existingRequest.length > 0) {
+      return { success: false, message: 'Join request already exists for this group' };
+    }
+    
+    // Insert the join request
+    const result = await db.query(
+      'INSERT INTO GroupJoinRequests (user_id, study_group_id) VALUES (?, ?)',
+      [user_id, study_group_id]
+    );
+    return { success: true, message: 'Join request submitted successfully', request_id: result.insertId };
+  } catch (error) {
+    console.error('DB error requesting join:', error);
+    throw error;
+  }
+};
+
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
@@ -419,5 +442,6 @@ module.exports = {
   joinStudyGroup,
   leaveStudyGroup,
   listGroupMembers,
-  removeGroupMember
+  removeGroupMember,
+  requestJoinGroup
 };
