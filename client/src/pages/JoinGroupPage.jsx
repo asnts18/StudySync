@@ -29,7 +29,7 @@ const JoinGroupPage = () => {
         // Fetch groups from user's university
         const groups = await studyGroupService.getUniversityGroups(currentUser.university_id);
         
-        // Format the groups
+        // Format the groups and check for ownership
         const formattedGroups = groups.map(group => ({
           study_group_id: group.study_group_id,
           name: group.name,
@@ -39,7 +39,9 @@ const JoinGroupPage = () => {
           course_code: group.course_code,
           course_name: group.course_name,
           tags: group.tags || [],
-          is_private: group.is_private === 1
+          is_private: group.is_private === 1 || group.is_private === true,
+          // Check if the current user is the owner of this group
+          is_owner: group.owner_id === currentUser.user_id
         }));
         
         setAllGroups(formattedGroups);
@@ -142,6 +144,8 @@ const JoinGroupPage = () => {
                 group={group}
                 onViewMore={handleViewMore}
                 onJoinGroup={handleJoinGroup}
+                // Don't show the Join button for groups the user owns
+                showJoinButton={!group.is_owner}
               />
             ))
           ) : (

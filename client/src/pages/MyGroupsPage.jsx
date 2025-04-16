@@ -36,6 +36,7 @@ const MyGroupsPage = () => {
         const groups = await studyGroupService.getUserGroups();
         
         // Format the groups for StudyGroupCard component
+        // Make sure is_private is properly converted to boolean
         const formattedGroups = groups.map(group => ({
           study_group_id: group.study_group_id,
           name: group.name,
@@ -45,7 +46,8 @@ const MyGroupsPage = () => {
           meetingTime: group.meeting_time,
           location: group.location,
           tags: group.tags || [],
-          is_owner: group.is_owner
+          is_owner: group.is_owner === 1 || group.is_owner === true,
+          is_private: group.is_private === 1 || group.is_private === true
         }));
         
         setUserGroups(formattedGroups);
