@@ -46,6 +46,17 @@ const studyGroupService = {
     }
   },
 
+  // Delete a study group
+  deleteStudyGroup: async (groupId) => {
+    try {
+      const response = await api.delete(`/study-groups/${groupId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting group:', error);
+      throw error;
+    }
+  },
+
   // Join a study group
   joinGroup: async (groupId) => {
     try {

@@ -1,7 +1,7 @@
 // pages/GroupPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, BookOpen, Plus, CalendarClock, Calendar, Repeat, Edit } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, Plus, CalendarClock, Calendar, Repeat, Edit, Trash } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import studyGroupService from '../api/studyGroupService';
 import meetingService from '../api/meetingService';
@@ -22,6 +22,7 @@ const GroupPage = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' or 'past'
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Helper function to format date strings
   const formatDateString = (dateString) => {
@@ -179,6 +180,30 @@ const GroupPage = () => {
     }));
   };
 
+  const handleDeleteGroup = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteGroup = async () => {
+    try {
+      setLoading(true);
+      
+      await studyGroupService.deleteStudyGroup(groupId);
+            
+      navigate('/my-groups', { 
+        state: { deletedGroup: true, groupName: group.name } 
+      });
+      
+      setShowDeleteConfirm(false);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error deleting group:', err);
+      setError('Failed to delete group. Please try again.');
+      setShowDeleteConfirm(false);
+      setLoading(false);
+    }
+  };
+
   // Filter meetings based on active tab
   const filteredMeetings = meetings.filter(meeting => {
     const today = startOfDay(new Date());
@@ -231,33 +256,43 @@ const GroupPage = () => {
   return (
     <div className="min-h-screen bg-white">
       <main className="max-w-6xl mx-auto px-8 py-12">
-        {/* Header with back button */}
-        <div className="flex items-center gap-4 mb-12">
-          <button 
-            onClick={() => navigate('/my-groups')} 
-            className="p-2 border-2 border-black hover:bg-gray-200 transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <div className="flex items-center">
-            <h1 className="text-4xl font-bold">{group.name}</h1>
-            {isOwner && (
-              <button 
-                onClick={() => setIsEditModalOpen(true)}
-                className="ml-4 px-3 py-1 bg-primary-yellow border-2 border-black text-sm flex items-center gap-1"
-              >
-                <Edit className="w-3 h-3" />
-                Edit Group
-              </button>
-            )}
-          </div>
-          {isOwner && (
-            <span className="ml-4 px-3 py-1 bg-primary-yellow border-2 border-black text-sm">
-              You are the owner
-            </span>
-          )}
-        </div>
-
+{/* Header with back button and group name */}
+<div className="mb-12">
+  <div className="flex items-center justify-between">
+    {/* Left side: back button and group name */}
+    <div className="flex items-center gap-4">
+      <button 
+        onClick={() => navigate('/my-groups')} 
+        className="p-2 border-2 border-black hover:bg-gray-200 transition-colors"
+      >
+        <ArrowLeft className="w-6 h-6" />
+      </button>
+      <div>
+        <h1 className="text-4xl font-bold">{group.name}</h1>
+      </div>
+    </div>
+    
+    {/* Right side: action buttons */}
+    {isOwner && (
+      <div className="flex items-center gap-2">
+        <button 
+          onClick={() => setIsEditModalOpen(true)}
+          className="px-3 py-1 bg-primary-yellow border-2 border-black text-sm flex items-center gap-1"
+        >
+          <Edit className="w-3 h-3" />
+          Edit Group
+        </button>
+        <button 
+          onClick={handleDeleteGroup}
+          className="px-3 py-1 bg-red-500 text-white border-2 border-black text-sm flex items-center gap-1"
+        >
+          <Trash className="w-3 h-3" />
+          Delete Group
+        </button>
+      </div>
+    )}
+  </div>
+</div>
         {/* Group Details Section */}
         <div className="mb-12 border-2 border-black p-6">
           <h2 className="text-2xl font-semibold mb-4">Group Details</h2>
@@ -414,6 +449,30 @@ const GroupPage = () => {
           onClose={() => setIsEditModalOpen(false)}
           onUpdateSuccess={handleGroupUpdate}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white w-full max-w-md border-2 border-black p-6">
+            <h2 className="text-2xl font-bold mb-4">Delete Group</h2>
+            <p className="mb-6">Are you sure you want to delete "{group.name}"? This action cannot be undone.</p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 border-2 border-black hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteGroup}
+                className="flex-1 px-4 py-2 bg-red-500 text-white border-2 border-black hover:bg-red-600 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
