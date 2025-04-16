@@ -88,6 +88,16 @@ getGroupMembers: async (groupId) => {
     console.error('Error fetching group members:', error);
     throw error;
   }
+},
+
+getUniversityGroups: async (universityId) => {
+  try {
+    const response = await api.get(`/study-groups/university/${universityId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching university groups:', error);
+    throw error;
+  }
 }
 
   

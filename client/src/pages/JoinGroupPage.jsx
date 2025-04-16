@@ -1,68 +1,81 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ArrowLeft } from 'lucide-react';
 import GroupDetailModal from '../components/GroupDetailModal';
 import StudyGroupCard from '../components/StudyGroupCard';
+import { useAuth } from '../contexts/AuthContext';
+import studyGroupService from '../api/studyGroupService';
+import tagService from '../api/tagService';
 
 const JoinGroupPage = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [allGroups, setAllGroups] = useState([]);
+  const [allTags, setAllTags] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Example data
-  const allGroups = [
-    {
-      name: "CS 11 Study Group",
-      currentMembers: 3,
-      maxMembers: 5,
-      meetingTime: "Tues/Thurs 3-5 pm",
-      location: "Tisch Library",
-      tags: ["Quiet Study", "Group Assignment"]
-    },
-    {
-      name: "Calculus II Group",
-      currentMembers: 4,
-      maxMembers: 6,
-      meetingTime: "Mon/Wed 2-4 pm",
-      location: "Science Center",
-      tags: ["Problem Solving", "Exam Prep"]
-    },
-    {
-      name: "Biology 101 Study Session",
-      currentMembers: 2,
-      maxMembers: 4,
-      meetingTime: "Fri 1-3 pm",
-      location: "Science Center",
-      tags: ["Discussion Based", "Lab Review"]
-    }
-  ];
+  // Fetch groups and tags when component mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!currentUser || !currentUser.university_id) return;
+      
+      setLoading(true);
+      try {
+        // Fetch groups from user's university
+        const groups = await studyGroupService.getUniversityGroups(currentUser.university_id);
+        
+        // Format the groups
+        const formattedGroups = groups.map(group => ({
+          study_group_id: group.study_group_id,
+          name: group.name,
+          description: group.description,
+          currentMembers: group.current_members || 1,
+          maxMembers: group.max_capacity,
+          course_code: group.course_code,
+          course_name: group.course_name,
+          tags: group.tags || [],
+          is_private: group.is_private === 1
+        }));
+        
+        setAllGroups(formattedGroups);
+        
+        // Fetch all available tags
+        const tagsData = await tagService.getAllTags();
+        setAllTags(tagsData.map(tag => tag.name));
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load groups. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const allTags = useMemo(() => {
-    const tagSet = new Set();
-    allGroups.forEach(group => {
-      group.tags.forEach(tag => tagSet.add(tag));
-    });
-    return Array.from(tagSet);
-  }, [allGroups]);
+    fetchData();
+  }, [currentUser]);
 
-  const filteredGroups = useMemo(() => {
-    return allGroups.filter(group => {
-      const searchFields = [
-        group.name.toLowerCase(),
-        group.location.toLowerCase(),
-        ...group.tags.map(tag => tag.toLowerCase())
-      ].join(' ');
+  // Filter groups based on search query and selected tags
+  const filteredGroups = allGroups.filter(group => {
+    const searchFields = [
+      group.name.toLowerCase(),
+      group.course_code?.toLowerCase() || '',
+      group.course_name?.toLowerCase() || '',
+      group.description?.toLowerCase() || '',
+      ...(group.tags || []).map(tag => tag.toLowerCase())
+    ].join(' ');
 
-      const matchesSearch = searchQuery === '' || 
-        searchFields.includes(searchQuery.toLowerCase());
+    const matchesSearch = searchQuery === '' || 
+      searchFields.includes(searchQuery.toLowerCase());
 
-      const matchesTags = selectedTags.length === 0 || 
-        selectedTags.every(tag => group.tags.includes(tag));
+    const matchesTags = selectedTags.length === 0 || 
+      selectedTags.every(tag => (group.tags || []).includes(tag));
 
-      return matchesSearch && matchesTags;
-    });
-  }, [allGroups, searchQuery, selectedTags]);
+    return matchesSearch && matchesTags;
+  });
 
   const handleTagClick = (tag) => {
     setSelectedTags(prev => 
@@ -80,6 +93,10 @@ const JoinGroupPage = () => {
     setSelectedGroup(null);
   };
 
+  const handleJoinGroup = (group) => {
+    navigate(`/groups/${group.study_group_id}`);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <main className="max-w-6xl mx-auto px-8 py-12">
@@ -94,6 +111,13 @@ const JoinGroupPage = () => {
           <h1 className="text-4xl font-bold">find a study group</h1>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="mb-6 p-4 border-2 border-red-500 bg-red-100 text-red-700">
+            {error}
+          </div>
+        )}
+
         {/* Search Bar */}
         <div className="relative mb-8">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -106,31 +130,18 @@ const JoinGroupPage = () => {
           />
         </div>
 
-        {/* Tags Filter */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {allTags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => handleTagClick(tag)}
-              className={`px-3 py-1 border-2 border-black transition-colors ${
-                selectedTags.includes(tag)
-                  ? 'bg-light-orange text-black'
-                  : 'bg-white text-black hover:bg-gray-200'
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
 
         {/* Group Listings */}
         <div className="space-y-4">
-          {filteredGroups.length > 0 ? (
+          {loading ? (
+            <div className="py-6 text-center">Loading study groups...</div>
+          ) : filteredGroups.length > 0 ? (
             filteredGroups.map((group, index) => (
               <StudyGroupCard 
-                key={index} 
+                key={`group-${group.study_group_id || index}`}
                 group={group}
-                onViewMore={handleViewMore} 
+                onViewMore={handleViewMore}
+                onJoinGroup={handleJoinGroup}
               />
             ))
           ) : (

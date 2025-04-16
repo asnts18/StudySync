@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import StudyGroupCard from '../components/StudyGroupCard';
-import GroupDetailModal from '../components/GroupDetailModal';
 import { ArrowLeft, Plus } from 'lucide-react';
 import studyGroupService from '../api/studyGroupService';
 
@@ -11,7 +10,6 @@ const MyGroupsPage = () => {
   
   // State variables
   const [userGroups, setUserGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -63,11 +61,7 @@ const MyGroupsPage = () => {
   }, []);
 
   const handleViewMore = (group) => {
-    setSelectedGroup(group);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedGroup(null);
+    navigate(`/groups/${group.study_group_id}`);
   };
 
   return (
@@ -166,14 +160,6 @@ const MyGroupsPage = () => {
           )}
         </section>
       </main>
-
-      {/* Detail Modal */}
-      {selectedGroup && (
-        <GroupDetailModal 
-          group={selectedGroup}
-          onClose={handleCloseModal}
-        />
-      )}
     </div>
   );
 };

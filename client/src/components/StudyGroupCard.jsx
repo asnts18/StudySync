@@ -1,15 +1,20 @@
 // components/StudyGroupCard.jsx
 import React from 'react';
-import { Users, BookOpen, Star } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Users, BookOpen, Star, Lock, Globe } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const StudyGroupCard = ({ 
   group, 
   showViewMoreButton = true, 
   showJoinButton = true,
+  onViewMore,
   onJoinGroup
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check if we're on the JoinGroupPage
+  const isJoinPage = location.pathname === '/join';
 
   const handleViewGroup = () => {
     navigate(`/groups/${group.study_group_id}`);
@@ -25,6 +30,16 @@ const StudyGroupCard = ({
               <Star className="w-3 h-3 mr-1" /> Owner
             </span>
           )}
+          {/* Privacy indicator */}
+          <span className={`flex items-center text-sm px-2 py-1 border border-black ml-auto ${
+            group.is_private ? "bg-gray-100" : "bg-light-orange"
+          }`}>
+            {group.is_private ? (
+              <><Lock className="w-3 h-3 mr-1" /> Private</>
+            ) : (
+              <><Globe className="w-3 h-3 mr-1" /> Public</>
+            )}
+          </span>
         </div>
 
         {/* Group details with reduced info */}
@@ -50,10 +65,10 @@ const StudyGroupCard = ({
       <div className="flex flex-col gap-2 flex-shrink-0">
         {showViewMoreButton && (
           <button 
-            onClick={handleViewGroup}
+            onClick={() => onViewMore?.(group)}
             className="px-4 py-2 border-2 border-black text-black hover:bg-gray-200 transition-colors"
           >
-            View Group
+            {isJoinPage ? "See Details" : "View Group"}
           </button>
         )}
         {showJoinButton && !group.is_owner && (
