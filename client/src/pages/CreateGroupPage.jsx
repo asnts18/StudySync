@@ -4,22 +4,15 @@ import { ArrowLeft, Search, Plus, X } from "lucide-react";
 import { Textarea } from "../components/ui/textarea";
 import courseService from "../api/courseService";
 import studyGroupService from "../api/studyGroupService";
-import tagService from "../api/tagService"; // Import the tag service
 import { useAuth } from "../contexts/AuthContext";
 
 const CreateGroupPage = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const [selectedTags, setSelectedTags] = useState([]);
-  const [availableTags, setAvailableTags] = useState([]); // State to store tags from database
-  const [location, setLocation] = useState("");
   const [groupSize, setGroupSize] = useState("3");
   const [additionalInfo, setAdditionalInfo] = useState("");
-  const [selectedDays, setSelectedDays] = useState([]);
-  const [meetingTime, setMeetingTime] = useState("");
-  const [repeating, setRepeating] = useState("none");
   const [groupName, setGroupName] = useState("");
-  const [isPrivate, setIsPrivate] = useState(false); // New state for privacy setting
+  const [isPrivate, setIsPrivate] = useState(false);
   
   // Course-related state
   const [courses, setCourses] = useState([]);
@@ -32,16 +25,12 @@ const CreateGroupPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch tags and courses when component mounts
+  // Fetch courses when component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
         setError("");
-        
-        // Fetch tags from the database
-        const tags = await tagService.getAllTags();
-        setAvailableTags(tags);
         
         // Fetch courses if user is logged in and has a university
         if (currentUser && currentUser.university_id) {
@@ -49,8 +38,8 @@ const CreateGroupPage = () => {
           setCourses(universityCourses);
         }
       } catch (error) {
-        console.error("Error fetching initial data:", error);
-        setError("Failed to load initial data. Please try again.");
+        console.error("Error fetching courses:", error);
+        setError("Failed to load courses. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -58,12 +47,6 @@ const CreateGroupPage = () => {
 
     fetchData();
   }, [currentUser]);
-
-  const handleTagClick = (tag) => {
-    setSelectedTags((prev) => 
-      prev.includes(tag.name) ? prev.filter((t) => t !== tag.name) : [...prev, tag.name]
-    );
-  };
 
   const handleAddNewCourse = () => {
     setIsAddingNewCourse(true);
@@ -143,7 +126,7 @@ const CreateGroupPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-     // Name validation
+    // Name validation
     if (!groupName) {
       alert("Please provide a group name");
       return;
@@ -153,8 +136,8 @@ const CreateGroupPage = () => {
     const maxCapacity = parseInt(groupSize);
     if (isNaN(maxCapacity) || maxCapacity < 1 || maxCapacity > 8) {
       alert("Group size must be between 1 and 8 members");
-    return;
-  }
+      return;
+    }
     
     // Create study group data object
     const studyGroupData = {
