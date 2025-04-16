@@ -159,6 +159,25 @@ const removeMember = async (req, res) => {
   }
 };
 
+
+const requestJoinGroup = async (req, res) => {
+  try {
+    const study_group_id = req.params.id; // The group ID from the URL parameter
+    const user_id = req.userId;           // Authenticated user ID from auth middleware
+    
+    const result = await groupService.requestJoinGroup({ study_group_id, user_id });
+    
+    if (!result.success) {
+      return res.status(400).json({ message: result.message });
+    }
+    
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error requesting to join study group:', error);
+    res.status(500).json({ message: 'Failed to submit join request' });
+  }
+};
+
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
@@ -168,5 +187,6 @@ module.exports = {
   joinStudyGroup,
   leaveStudyGroup,
   listMembers,
-  removeMember
+  removeMember,
+  requestJoinGroup
 };
