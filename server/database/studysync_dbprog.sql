@@ -336,16 +336,7 @@ WHERE m.meeting_date >= CURRENT_DATE  -- Filters for meetings scheduled from tod
 
 
 -- IV. Triggers (2)
--- TODO ABBY: 
-/*
-    Trigger #1: tr_AfterMeetingInsert - Update group activity statistics
-    Example usage: [ADD]
-*/
--- TODO NAVANEETH:
-/*
-    Trigger #2: tr_AfterJoinRequest - Notify group owner of new join requests
-    Example usage: [ADD]
-*/
+
 DELIMITER //
 
 CREATE TRIGGER tr_AfterJoinRequest
@@ -360,17 +351,39 @@ BEGIN
     FROM StudyGroup
     WHERE study_group_id = NEW.study_group_id;
 
+
     -- Insert a notification record for the group owner
-    INSERT INTO Notifications (user_id, notification_type, message, status, created_at)
-    VALUES (v_owner_id, 'join_request', 
+    INSERT INTO Notifications (user_id, message, status, created_at)
+    VALUES (v_owner_id,
             CONCAT('New join request for your study group: ', v_group_name), 
             'pending', CURRENT_TIMESTAMP);
-    
-    -- Update the request count statistics (optional, if you maintain a count of pending requests)
-    UPDATE StudyGroup
-    SET pending_requests_count = pending_requests_count + 1
-    WHERE study_group_id = NEW.study_group_id;
     
 END//
 
 DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER tr_AfterJoinRequestStatusChange
+AFTER UPDATE ON GroupJoinRequests
+FOR EACH ROW
+BEGIN
+    DECLARE v_group_name VARCHAR(255);
+    
+    -- Only proceed if status has changed
+    IF NEW.status != OLD.status THEN
+        -- Get the study group name
+        SELECT name INTO v_group_name
+        FROM StudyGroup
+        WHERE study_group_id = NEW.study_group_id;
+        
+        -- Insert notification for the requesting user
+        INSERT INTO Notifications (user_id, message, status, created_at)
+        VALUES (NEW.user_id,
+                CONCAT('Your request to join ', v_group_name, ' has been ', LOWER(NEW.status)), 
+                'unread', CURRENT_TIMESTAMP);
+    END IF;
+END//
+
+DELIMITER ;
+

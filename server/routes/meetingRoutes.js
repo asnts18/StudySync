@@ -4,10 +4,9 @@ const router = express.Router();
 const meetingController = require('../controllers/meetingController');
 const auth = require('../middleware/auth.middleware');
 
-// Protected endpoint: Create a new meeting (requires authentication)
 router.post('/', auth.verifyToken, meetingController.createMeeting);
-
-// Get meetings with a group
+// router.put('/:meetingId', auth.verifyToken, meetingController.updateMeeting);
+// router.delete('/:meetingId', auth.verifyToken, meetingController.deleteMeeting);
 router.get('/group/:groupId', auth.verifyToken, meetingController.getGroupMeetings);
 
 
