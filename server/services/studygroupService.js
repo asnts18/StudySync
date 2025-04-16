@@ -156,6 +156,58 @@ const listStudyGroups = async (filters) => {
   }
 };
 
+const getStudyGroupsByUniversity = async (universityId) => {
+  try {
+    let sql = `
+      SELECT sg.*, 
+        (SELECT COUNT(*) FROM User_StudyGroup usg WHERE usg.study_group_id = sg.study_group_id) as current_members,
+        c.name as course_name
+      FROM StudyGroup sg
+      LEFT JOIN Course c ON sg.course_code = c.course_code AND sg.university_id = c.university_id
+      WHERE sg.university_id = ? AND sg.is_private = 0
+      ORDER BY sg.created_at DESC
+      LIMIT 10
+    `;
+    
+    const groups = await db.query(sql, [universityId]);
+    
+    // For each group, fetch associated tags through meetings
+    for (const group of groups) {
+      // Get all meetings for this group
+      const meetings = await db.query(
+        `SELECT meeting_id FROM Meeting WHERE study_group_id = ?`,
+        [group.study_group_id]
+      );
+      
+      // Collect all tag names for all meetings of this group
+      const tags = [];
+      for (const meeting of meetings) {
+        const meetingTags = await db.query(
+          `SELECT t.name 
+           FROM Tags t
+           JOIN Meeting_Tags mt ON t.tag_id = mt.tag_id
+           WHERE mt.meeting_id = ?`,
+          [meeting.meeting_id]
+        );
+        
+        meetingTags.forEach(tag => {
+          if (!tags.includes(tag.name)) {
+            tags.push(tag.name);
+          }
+        });
+      }
+      
+      group.tags = tags;
+    }
+    
+    return groups;
+  } catch (error) {
+    console.error('DB error getting university study groups:', error);
+    throw error;
+  }
+};
+
+
 // Get user's study groups (both owned and joined)
 const getUserStudyGroups = async (userId) => {
   try {
@@ -372,6 +424,7 @@ module.exports = {
   createStudyGroup, 
   listStudyGroups,
   getUserStudyGroups,
+  getStudyGroupsByUniversity,
   getStudyGroupById,
   joinStudyGroup,
   leaveStudyGroup,
