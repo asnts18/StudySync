@@ -9,7 +9,7 @@ const studyGroupRoutes = require('./routes/studyGroupRoutes');
 const tagRoutes = require('./routes/tagRoutes'); 
 const meetingRoutes = require('./routes/meetingRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
-
+const achievementRoutes = require('./routes/achievementRoutes');
 
 require('dotenv').config();
 
@@ -31,6 +31,8 @@ app.use('/api/study-groups', studyGroupRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/meetings', meetingRoutes); 
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/achievements', achievementRoutes);
+
 
 // Basic route for testing
 app.get('/', (req, res) => {

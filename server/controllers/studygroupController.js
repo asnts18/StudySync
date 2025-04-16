@@ -237,6 +237,40 @@ const requestJoinGroup = async (req, res) => {
   }
 };
 
+// list all pending requests in this group (owner only)
+const getPendingRequests = async (req, res) => {
+  try {
+    const study_group_id = req.params.id;
+    const owner_id       = req.userId;
+
+    const requests = await groupService.listPendingRequests(study_group_id, owner_id);
+    res.status(200).json(requests);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ message: err.message || 'Could not fetch requests' });
+  }
+};
+
+// approve / reject
+const respondToJoinRequest = async (req, res) => {
+  try {
+    const { id: study_group_id, requestId } = req.params;
+    const { action } = req.body; // 'approve' or 'reject'
+    if (!['approve', 'reject'].includes(action))
+      return res.status(400).json({ message: 'action must be approve | reject' });
+
+    const result = await groupService.respondToJoinRequest({
+      request_id : requestId,
+      owner_id   : req.userId,
+      action
+    });
+    res.status(200).json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ message: err.message || 'Could not process request' });
+  }
+};
+
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
@@ -249,5 +283,7 @@ module.exports = {
   leaveStudyGroup,
   listMembers,
   removeMember,
-  requestJoinGroup
+  requestJoinGroup,
+  getPendingRequests,
+  respondToJoinRequest
 };
