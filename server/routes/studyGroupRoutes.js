@@ -3,19 +3,25 @@ const router = express.Router();
 const groupController = require('../controllers/studygroupController');
 const auth = require('../middleware/auth.middleware');
 
-// Protected routes - require authentication
-router.post('/', auth.verifyToken, groupController.createStudyGroup);
-router.get('/my-groups', auth.verifyToken, groupController.getUserGroups); // This needs to come BEFORE the '/:id' route
 
-// Public routes
+router.post('/', auth.verifyToken, groupController.createStudyGroup);
+router.get('/my-groups', auth.verifyToken, groupController.getUserGroups); 
+router.put('/:groupId', auth.verifyToken, groupController.updateStudyGroup); 
+router.delete('/:id', auth.verifyToken, groupController.deleteStudyGroup);
+
+
 router.get('/', groupController.listStudyGroups);
 router.get('/university/:universityId', groupController.getUniversityGroups);
 router.get('/:id', groupController.getGroupDetail);
+
 router.post('/:id/join', auth.verifyToken, groupController.joinStudyGroup);
 router.delete('/:id/members', auth.verifyToken, groupController.leaveStudyGroup);
+
 router.get('/:id/members', auth.verifyToken, groupController.listMembers);
 router.delete('/:id/members/:memberId', auth.verifyToken, groupController.removeMember);
 // New endpoint for join requests (for private groups)
 router.post('/:id/request-join', auth.verifyToken, groupController.requestJoinGroup);
+
+// TODO: add route for Study Group 
 
 module.exports = router;

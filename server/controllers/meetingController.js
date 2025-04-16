@@ -17,17 +17,18 @@ const createMeeting = async (req, res) => {
   }
 };
 
-const getAllMeetings = async (req, res) => {
+const getGroupMeetings = async (req, res) => {
   try {
-    const meetings = await meetingService.listMeetings();
+    const groupId = req.params.groupId;
+    const meetings = await meetingService.getGroupMeetings(groupId);
     res.status(200).json(meetings);
   } catch (error) {
-    console.error("Error listing meetings:", error);
-    res.status(500).json({ message: "Failed to list meetings" });
+    console.error("Error fetching group meetings:", error);
+    res.status(500).json({ message: "Failed to fetch meetings" });
   }
 };
 
 module.exports = {
   createMeeting,
-  getAllMeetings
+  getGroupMeetings
 };

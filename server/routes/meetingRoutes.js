@@ -7,7 +7,8 @@ const auth = require('../middleware/auth.middleware');
 // Protected endpoint: Create a new meeting (requires authentication)
 router.post('/', auth.verifyToken, meetingController.createMeeting);
 
-// Optionally, secure GET as well, or leave it public:
-router.get('/', auth.verifyToken, meetingController.getAllMeetings);
+// Get meetings with a group
+router.get('/group/:groupId', auth.verifyToken, meetingController.getGroupMeetings);
+
 
 module.exports = router;

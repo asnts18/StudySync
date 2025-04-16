@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage';
 import JoinGroupPage from './pages/JoinGroupPage';
 import CreateGroupPage from './pages/CreateGroupPage';
 import GroupPage from './pages/GroupPage';
+import CreateMeetingPage from './pages/CreateMeetingPage';
 import MyGroupsPage from './pages/MyGroupsPage';
 import ProfilePage from './pages/ProfilePage'; 
 import ProfileEditPage from './pages/ProfileEditPage';
@@ -59,6 +60,12 @@ function App() {
               <Route path="/groups/:groupId" element={
                 <ProtectedRoute>
                   <GroupPage />
+                </ProtectedRoute>
+              } />
+              {/* Meeting routes */}
+              <Route path="/groups/:groupId/meetings/create" element={
+                <ProtectedRoute>
+                  <CreateMeetingPage />
                 </ProtectedRoute>
               } />
               {/* Profile routes */}

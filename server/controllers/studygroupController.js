@@ -65,6 +65,7 @@ const listStudyGroups = async (req, res) => {
   }
 };
 
+
 const getUniversityGroups = async (req, res) => {
   try {
     const universityId = req.params.universityId;
@@ -159,6 +160,64 @@ const removeMember = async (req, res) => {
   }
 };
 
+const updateStudyGroup = async (req, res) => {
+  try {
+    const userId = req.userId; // From auth middleware
+    const { groupId } = req.params;
+    const { name, description } = req.body;
+
+    // Validation
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ message: 'Group name is required' });
+    }
+
+    // Call service to update the group
+    const updatedGroup = await groupService.updateStudyGroup(groupId, userId, {
+      name,
+      description: description || null
+    });
+
+    res.status(200).json({
+      message: 'Study group updated successfully',
+      group: updatedGroup
+    });
+  } catch (error) {
+    console.error('Error updating study group:', error);
+    
+    // Check for specific error types
+    if (error.message === 'Study group not found') {
+      return res.status(404).json({ message: 'Study group not found' });
+    } else if (error.message === 'Only the owner can update the group') {
+      return res.status(403).json({ message: 'Only the owner can update this group' });
+    }
+    
+    res.status(500).json({ message: 'Failed to update study group' });
+  }
+};
+
+const deleteStudyGroup = async (req, res) => {
+  try {
+    const userId = req.userId; // From auth middleware
+    const groupId = req.params.id;
+    
+    const result = await groupService.deleteStudyGroup(groupId, userId);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error deleting study group:', error);
+    
+    // Check for specific error types
+    if (error.message === 'Study group not found') {
+      return res.status(404).json({ message: 'Study group not found' });
+    } else if (error.message === 'Only the owner can delete the group') {
+      return res.status(403).json({ message: 'Only the owner can delete this group' });
+    }
+    
+    res.status(500).json({ message: 'Failed to delete study group' });
+  }
+};
+
+// TODO: Delete study group 
+
 
 const requestJoinGroup = async (req, res) => {
   try {
@@ -181,6 +240,8 @@ const requestJoinGroup = async (req, res) => {
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
+  updateStudyGroup,
+  deleteStudyGroup,
   getUniversityGroups,
   getUserGroups,
   getGroupDetail,

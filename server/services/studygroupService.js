@@ -1,3 +1,4 @@
+// services/studygroupService.js
 const db = require('../config/db.config');
 
 const createStudyGroup = async ({
@@ -63,6 +64,74 @@ const createStudyGroup = async ({
     }
   } catch (error) {
     console.error('DB error creating study group:', error);
+    throw error;
+  }
+};
+
+// Update study group - only name and description can be updated
+const updateStudyGroup = async (groupId, userId, updateData) => {
+  try {
+    // First, verify that the user is the owner of the group
+    const ownerCheck = await db.query(
+      'SELECT owner_id FROM StudyGroup WHERE study_group_id = ?',
+      [groupId]
+    );
+    
+    if (!ownerCheck || ownerCheck.length === 0) {
+      throw new Error('Study group not found');
+    }
+    
+    if (ownerCheck[0].owner_id !== userId) {
+      throw new Error('Only the owner can update the group');
+    }
+    
+    // Extract only the fields that are allowed to be updated
+    // Ensure no undefined values are passed to the query
+    const name = updateData.name || ''; // Default empty string if null
+    const description = updateData.description === undefined ? null : updateData.description;
+    
+    console.log('Update params:', { groupId, name, description });
+    
+    // Update only name and description
+    await db.query(
+      'UPDATE StudyGroup SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE study_group_id = ?',
+      [name, description === undefined ? null : description, groupId]
+    );
+    
+    // Fetch and return the updated group
+    return getStudyGroupById(groupId);
+  } catch (error) {
+    console.error('DB error updating study group:', error);
+    throw error;
+  }
+};
+
+const deleteStudyGroup = async (groupId, userId) => {
+  try {
+    // First verify that the user is the owner of the group
+    const ownerCheck = await db.query(
+      'SELECT owner_id FROM StudyGroup WHERE study_group_id = ?',
+      [groupId]
+    );
+    
+    if (!ownerCheck || ownerCheck.length === 0) {
+      throw new Error('Study group not found');
+    }
+    
+    if (ownerCheck[0].owner_id !== userId) {
+      throw new Error('Only the owner can delete the group');
+    }
+    
+    // Delete the group
+    // Note: Assuming cascade delete is set up in the database for related records
+    const result = await db.query(
+      'DELETE FROM StudyGroup WHERE study_group_id = ?',
+      [groupId]
+    );
+    
+    return { success: true, message: 'Study group deleted successfully' };
+  } catch (error) {
+    console.error('DB error deleting study group:', error);
     throw error;
   }
 };
@@ -449,6 +518,8 @@ module.exports = {
   getUserStudyGroups,
   getStudyGroupsByUniversity,
   getStudyGroupById,
+  updateStudyGroup,
+  deleteStudyGroup,
   joinStudyGroup,
   leaveStudyGroup,
   listGroupMembers,
