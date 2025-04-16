@@ -1,14 +1,38 @@
-// server/routes/achievementRoutes.js
-const express     = require('express');
-const auth        = require('../middleware/auth.middleware');
-const controller  = require('../controllers/achievementController');
-
+// routes/achievementRoutes.js
+const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth.middleware');
+const achievementController = require('../controllers/achievementController');
+const ctrl    = require('../controllers/achievementController');
 
-router.post('/',        auth.verifyToken, controller.createAchievement);
-router.get('/',         auth.verifyToken, controller.listAchievements);
-router.get('/:id',      auth.verifyToken, controller.getAchievement);
-router.put('/:id',      auth.verifyToken, controller.updateAchievement);
-router.delete('/:id',   auth.verifyToken, controller.deleteAchievement);
+// ‑‑‑ public GETs (you can secure if you like) ‑‑‑
+router.get('/',            achievementController.listAchievements);
+router.get('/:id',         achievementController.getAchievement);
 
-module.exports = router;      
+// ‑‑‑ protected write operations ‑‑‑
+router.post('/',           auth.verifyToken, achievementController.createAchievement);
+router.put('/:id',         auth.verifyToken, achievementController.updateAchievement);
+router.delete('/:id',      auth.verifyToken, achievementController.deleteAchievement);
+
+/* ───────────────── group‑scoped logic (owner only) ───────────────
+   NOTE these come AFTER the platform routes so "/:id" above
+   doesn’t swallow them – they start with /group/...             */
+   router.post (
+    '/group/:groupId',                   // create new achievement in group
+    auth.verifyToken,
+    ctrl.createGroupAchievement
+  );
+  
+  router.post (
+    '/group/:groupId/:achievementId/award/:memberId',   // give award
+    auth.verifyToken,
+    ctrl.awardAchievement
+  );
+  
+  router.delete(
+    '/group/:groupId/:achievementId/award/:memberId',   // revoke award
+    auth.verifyToken,
+    ctrl.revokeAchievement
+  );
+  
+module.exports = router;
