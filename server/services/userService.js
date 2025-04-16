@@ -4,7 +4,11 @@ const db = require('../config/db.config');
 const getUserProfile = async (userId) => {
   try {
     const rows = await db.query(
-      'SELECT user_id, email, first_name, last_name, bio, university_id FROM User WHERE user_id = ?', 
+      `SELECT u.user_id, u.email, u.first_name, u.last_name, u.bio, u.university_id, 
+              univ.name as university_name
+       FROM User u
+       LEFT JOIN University univ ON u.university_id = univ.university_id
+       WHERE u.user_id = ?`, 
       [userId]
     );
     return rows[0];
