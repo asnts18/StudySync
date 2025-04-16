@@ -63,4 +63,7 @@ const getGroupMeetings = async (groupId) => {
   }
 };
 
+// todo: update meeting
+// todo: delete meeting
+
 module.exports = { createMeeting, getGroupMeetings };

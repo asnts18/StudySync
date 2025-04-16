@@ -154,6 +154,7 @@ CREATE TABLE Notifications (
   notification_id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   message TEXT NOT NULL,
+  status VARCHAR(20),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
 );
@@ -169,18 +170,6 @@ CREATE TABLE Notifications (
 -- INSERT STATEMENTS FOR INITIAL DATA
 -- --------------------------------------------------------------------
 
-INSERT INTO Notifications (user_id, message) 
-VALUES 
-    (1, 'Your account has been successfully created.'),
-    (2, 'Your profile was updated successfully.'),
-    (3, 'You have a new message from the admin.'),
-    (4, 'Your subscription is about to expire. Please renew soon.'),
-    (5, 'You have a new friend request.');
-        INSERT INTO Notifications (user_id, message) 
-VALUES 
-    (6, 'Your account has been successfully created.'),
-    (7, 'Your profile was updated successfully.'),
-    (8, 'You have a new friend request.');
 -- Insert Universities
 INSERT INTO University (name, location) VALUES
 ('University of California, Berkeley', 'Berkeley, CA'),
@@ -195,7 +184,10 @@ INSERT INTO User (email, password, first_name, last_name, bio, university_id) VA
 ('bob@stanford.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Bob', 'Smith', 'Math enthusiast and study group organizer', 2),
 ('charlie@mit.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Charlie', 'Brown', 'Engineering student focused on robotics', 3),
 ('diana@harvard.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Diana', 'Prince', 'Pre-med student looking for study partners', 4),
-('evan@uw.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Evan', 'Williams', 'Business and Computer Science double major', 5);
+('evan@uw.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Evan', 'Williams', 'Business and Computer Science double major', 5),
+('frank@uw.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Frank', 'Miller', 'Physics major', 5),
+('grace@berkeley.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Grace', 'Lee', 'Chemistry student', 1),
+('henry@stanford.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Henry', 'Garcia', 'Economics major', 2);
 
 -- Insert Courses
 INSERT INTO Course (course_code, university_id, name, semester, description, course_type) VALUES
@@ -280,14 +272,29 @@ INSERT INTO GroupJoinRequests (user_id, study_group_id, request_date, status, re
 (4, 2, '2023-09-17 09:00:00', 'pending', NULL, NULL);  -- Diana requests to join MATH51 Warriors
 
 -- Insert Achievements
-INSERT INTO Achievements (name, description, is_platform_dependent) VALUES
+INSERT INTO Achievements (name, description, is_platform_default) VALUES
 ('Social Butterfly', 'Awarded for completing all assignments in CS61A', TRUE),
-('Most Consistent', 'Awarded for solving 100+ MATH51 problems', TRUE);
+('Most Consistent', 'Awarded for solving 100+ MATH51 problems', TRUE),
+('Algorithm Master', 'Awarded for exceptional performance in algorithm implementations', TRUE);
 
 -- Insert UserAchievements (many-to-many relationship between Users and Achievements)
 INSERT INTO UserAchievements (user_id, achievement_id) VALUES
 (1, 1), 
 (2, 2), 
 (3, 3);
+
+INSERT INTO Notifications (user_id, message) 
+VALUES 
+    (1, 'Your account has been successfully created.'),
+    (2, 'Your profile was updated successfully.'),
+    (3, 'You have a new message from the admin.'),
+    (4, 'Your subscription is about to expire. Please renew soon.'),
+    (5, 'You have a new friend request.');
+        INSERT INTO Notifications (user_id, message) 
+VALUES 
+    (6, 'Your account has been successfully created.'),
+    (7, 'Your profile was updated successfully.'),
+    (8, 'You have a new friend request.');
+
 
 

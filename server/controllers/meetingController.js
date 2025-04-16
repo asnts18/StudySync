@@ -28,6 +28,9 @@ const getGroupMeetings = async (req, res) => {
   }
 };
 
+// todo: update meeting
+// todo: delete meeting
+
 module.exports = {
   createMeeting,
   getGroupMeetings
