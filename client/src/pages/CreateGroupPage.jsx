@@ -160,7 +160,7 @@ const CreateGroupPage = () => {
       console.log("Created group:", createdGroup);
       
       // Navigate to "My Groups" page with a success message about the new group
-      navigate('/my-groups', { state: { newGroupCreated: true, groupName: groupName } });
+      navigate('/home', { state: { newGroupCreated: true, groupName: groupName } });
     } catch (error) {
       console.error("Error creating study group:", error);
       setError("Failed to create study group. Please try again.");

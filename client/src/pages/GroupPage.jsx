@@ -190,7 +190,7 @@ const GroupPage = () => {
       
       await studyGroupService.deleteStudyGroup(groupId);
             
-      navigate('/my-groups', { 
+      navigate('/home', { 
         state: { deletedGroup: true, groupName: group.name } 
       });
       
@@ -262,7 +262,7 @@ const GroupPage = () => {
     {/* Left side: back button and group name */}
     <div className="flex items-center gap-4">
       <button 
-        onClick={() => navigate('/my-groups')} 
+        onClick={() => navigate('/home')} 
         className="p-2 border-2 border-black hover:bg-gray-200 transition-colors"
       >
         <ArrowLeft className="w-6 h-6" />

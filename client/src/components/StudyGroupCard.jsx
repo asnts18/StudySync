@@ -15,6 +15,12 @@ const StudyGroupCard = ({
   
   // Check if we're on the JoinGroupPage
   const isJoinPage = location.pathname === '/join';
+  
+  // Ensure consistent boolean interpretation of is_private
+  const isPrivate = group.is_private === 1 || group.is_private === true;
+  
+  // Ensure consistent boolean interpretation of is_owner
+  const isOwner = group.is_owner === 1 || group.is_owner === true;
 
   const handleViewGroup = () => {
     navigate(`/groups/${group.study_group_id}`);
@@ -25,16 +31,16 @@ const StudyGroupCard = ({
       <div className="flex-1">
         <div className="text-left mb-3 flex items-center gap-2">
           <h3 className="text-xl font-semibold">{group.name}</h3>
-          {group.is_owner && (
+          {isOwner && (
             <span className="flex items-center text-sm bg-primary-yellow px-2 py-1 border border-black">
               <Star className="w-3 h-3 mr-1" /> Owner
             </span>
           )}
           {/* Privacy indicator */}
           <span className={`flex items-center text-sm px-2 py-1 border border-black ml-auto ${
-            group.is_private ? "bg-gray-100" : "bg-light-orange"
+            isPrivate ? "bg-gray-100" : "bg-light-orange"
           }`}>
-            {group.is_private ? (
+            {isPrivate ? (
               <><Lock className="w-3 h-3 mr-1" /> Private</>
             ) : (
               <><Globe className="w-3 h-3 mr-1" /> Public</>
@@ -71,7 +77,7 @@ const StudyGroupCard = ({
             {isJoinPage ? "See Details" : "View Group"}
           </button>
         )}
-        {showJoinButton && !group.is_owner && (
+        {showJoinButton && !isOwner && (
           <button 
             onClick={() => onJoinGroup?.(group)}
             className="px-4 py-2 border-2 border-black bg-primary-yellow text-black hover:bg-dark-yellow transition-colors"

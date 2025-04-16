@@ -308,8 +308,15 @@ const getUserStudyGroups = async (userId) => {
     
     const groups = await db.query(sql, [userId, userId]);
     
+    // Process groups to ensure consistent boolean values
+    const processedGroups = groups.map(group => ({
+      ...group,
+      is_private: group.is_private === 1 || group.is_private === true, // Ensure boolean conversion
+      is_owner: group.is_owner === 1 || group.is_owner === true // Ensure boolean conversion
+    }));
+    
     // For each group, fetch associated tags
-    for (const group of groups) {
+    for (const group of processedGroups) {
       // Get all meetings for this group
       const meetings = await db.query(
         `SELECT meeting_id FROM Meeting WHERE study_group_id = ?`,
@@ -337,7 +344,7 @@ const getUserStudyGroups = async (userId) => {
       group.tags = tags;
     }
     
-    return groups;
+    return processedGroups;
   } catch (error) {
     console.error('DB error getting user study groups:', error);
     throw error;
