@@ -1,6 +1,6 @@
 // components/GroupDetailModal.jsx
 import React from 'react';
-import { X, Users, MapPin, Clock, BookOpen } from 'lucide-react';
+import { X, Users, BookOpen } from 'lucide-react';
 
 const GroupDetailModal = ({ group, onClose }) => {
   if (!group) return null;
@@ -24,8 +24,8 @@ const GroupDetailModal = ({ group, onClose }) => {
         {/* Content */}
         <div className="p-6 space-y-6">
         
-                  {/* Description */}
-                  <div className="border-2 border-black p-4">
+          {/* Description */}
+          <div className="border-2 border-black p-4">
             <h3 className="font-semibold mb-2">About this group</h3>
             <p className="text-gray-700">
               {group.description || "Join us for focused study sessions where we work through course material, practice problems, and prepare for exams together."}
@@ -41,45 +41,38 @@ const GroupDetailModal = ({ group, onClose }) => {
               </div>
               <p className="mt-1 text-left">{group.currentMembers}/{group.maxMembers} members</p>
             </div>
+            
             <div className="border-2 border-black p-4">
               <div className="flex items-center gap-2 text-black">
-                <Clock className="w-4 h-4" />
-                <span className="font-medium">Meeting Time</span>
+                <BookOpen className="w-4 h-4" />
+                <span className="font-medium">Course</span>
               </div>
-              <p className="mt-1 text-left">{group.meetingTime}</p>
+              <p className="mt-1 text-left">
+                {group.course_code ? `${group.course_code}${group.course_name ? `: ${group.course_name}` : ''}` : 'No specific course'}
+              </p>
             </div>
-          </div>
-
-          {/* Location */}
-          <div className="border-2 border-black p-4">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              Location
-            </h3>
-            <p className="text-gray-700 text-left">{group.location}</p>
           </div>
 
           {/* Study Style */}
-          <div className="border-2 border-black p-4">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              Study Style
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {group.tags.map((tag, index) => (
-                <span 
-                  key={index}
-                  className="px-3 py-1 border-2 border-black bg-light-orange text-black text-sm"
-                >
-                  {tag}
-                </span>
-              ))}
+          {group.tags && group.tags.length > 0 && (
+            <div className="border-2 border-black p-4">
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Study Style
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {group.tags.map((tag, index) => (
+                  <span 
+                    key={index}
+                    className="px-3 py-1 border-2 border-black bg-light-orange text-black text-sm"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-
-
+          )}
         </div>
-
       </div>
     </div>
   );

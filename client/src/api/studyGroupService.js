@@ -78,17 +78,29 @@ const studyGroupService = {
       throw error;
     }
   },
-  
-  // Get all tags
-  getTags: async () => {
-    try {
-      const response = await api.get('/tags');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-      throw error;
-    }
+
+  // Get members of a specific study group
+getGroupMembers: async (groupId) => {
+  try {
+    const response = await api.get(`/study-groups/${groupId}/members`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching group members:', error);
+    throw error;
   }
+},
+
+getUniversityGroups: async (universityId) => {
+  try {
+    const response = await api.get(`/study-groups/university/${universityId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching university groups:', error);
+    throw error;
+  }
+}
+
+  
 };
 
 export default studyGroupService;

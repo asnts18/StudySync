@@ -9,10 +9,10 @@ router.get('/my-groups', auth.verifyToken, groupController.getUserGroups); // Th
 
 // Public routes
 router.get('/', groupController.listStudyGroups);
+router.get('/university/:universityId', groupController.getUniversityGroups);
 router.get('/:id', groupController.getGroupDetail);
 router.post('/:id/join', auth.verifyToken, groupController.joinStudyGroup);
 router.delete('/:id/members', auth.verifyToken, groupController.leaveStudyGroup);
-// New membership management endpoints:
 router.get('/:id/members', auth.verifyToken, groupController.listMembers);
 router.delete('/:id/members/:memberId', auth.verifyToken, groupController.removeMember);
 // New endpoint for join requests (for private groups)

@@ -14,8 +14,6 @@ const HomePage = () => {
   const [userGroups, setUserGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedGroup, setSelectedGroup] = useState(null);
-
   // Update username when currentUser changes
   useEffect(() => {
     if (currentUser && currentUser.first_name) {
@@ -39,10 +37,11 @@ const HomePage = () => {
           description: group.description,
           currentMembers: group.current_members || 1,
           maxMembers: group.max_capacity,
-          meetingTime: group.meeting_time,
-          location: group.location,
+          course_code: group.course_code,
+          course_name: group.course_name,
           tags: group.tags || [],
-          is_owner: group.is_owner
+          is_owner: group.is_owner,
+          is_private: group.is_private === 1
         }));
         
         // Only show the last 3 joined groups on the homepage
@@ -59,12 +58,10 @@ const HomePage = () => {
   }, [currentUser]);
 
   const handleViewMore = (group) => {
-    setSelectedGroup(group);
+    navigate(`/groups/${group.study_group_id}`);
   };
 
-  const handleCloseModal = () => {
-    setSelectedGroup(null);
-  };
+
 
   return (
     <div className="min-h-screen bg-white">
@@ -95,7 +92,7 @@ const HomePage = () => {
         </div>
 
         {/* Your Recent Groups */}
-        <section>
+        <section className="mb-16">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Your Recent Groups</h2>
             <button 
@@ -125,23 +122,17 @@ const HomePage = () => {
             <div className="py-6 text-center border-2 border-dashed border-gray-300">
               <p className="text-gray-500">You haven't joined any groups yet</p>
               <button 
-                onClick={() => navigate('/join')}
+                onClick={() => navigate('/create')}
                 className="mt-2 text-blue-600 hover:underline"
               >
-                Find a group to join
+                Create a group
               </button>
             </div>
           )}
         </section>
       </main>
 
-      {/* Detail Modal */}
-      {selectedGroup && (
-        <GroupDetailModal 
-          group={selectedGroup}
-          onClose={handleCloseModal}
-        />
-      )}
+      {/* We no longer need the detail modal since we're navigating directly to the group page */}
     </div>
   );
 };

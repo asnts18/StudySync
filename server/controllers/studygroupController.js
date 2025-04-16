@@ -3,7 +3,7 @@ const groupService = require('../services/studygroupService');
 
 const createStudyGroup = async (req, res) => {
   try {
-    const owner_id = req.userId;
+    const owner_id = req.userId; // From auth middleware
     const {
       name,
       description,
@@ -11,22 +11,21 @@ const createStudyGroup = async (req, res) => {
       university_id,
       max_capacity,
       is_private,
-      tags,
-      location,
-      meeting_time
     } = req.body;
+
+    // Basic validation (could be moved to validator middleware)
+    if (!name) {
+      return res.status(400).json({ message: 'Group name is required' });
+    }
 
     const newGroup = await groupService.createStudyGroup({
       name,
-      description,
+      description: description || null,
       owner_id,
-      course_code,
+      course_code: course_code || null,
       university_id,
-      max_capacity,
-      is_private: is_private ? 1 : 0,
-      tags,
-      location,
-      meeting_time
+      max_capacity: max_capacity || 8,
+      is_private: is_private || false
     });
 
     res.status(201).json(newGroup);
@@ -63,6 +62,17 @@ const listStudyGroups = async (req, res) => {
   } catch (error) {
     console.error('Error listing study groups:', error);
     res.status(500).json({ message: 'Failed to list study groups' });
+  }
+};
+
+const getUniversityGroups = async (req, res) => {
+  try {
+    const universityId = req.params.universityId;
+    const groups = await groupService.getStudyGroupsByUniversity(universityId);
+    res.status(200).json(groups);
+  } catch (error) {
+    console.error('Error fetching university study groups:', error);
+    res.status(500).json({ message: 'Failed to fetch university study groups' });
   }
 };
 
@@ -122,7 +132,7 @@ const leaveStudyGroup = async (req, res) => {
   }
 };
 
-// NEW: List all members of a study group
+// List all members of a study group
 const listMembers = async (req, res) => {
   try {
     const groupId = req.params.id;
@@ -133,7 +143,7 @@ const listMembers = async (req, res) => {
     res.status(500).json({ message: 'Failed to list group members' });
   }
 };
-// NEW: Remove a specific member from a study group
+// Remove a specific member from a study group
 const removeMember = async (req, res) => {
   try {
     const groupId = req.params.id;
@@ -171,6 +181,7 @@ const requestJoinGroup = async (req, res) => {
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
+  getUniversityGroups,
   getUserGroups,
   getGroupDetail,
   joinStudyGroup,
