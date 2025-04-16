@@ -65,6 +65,17 @@ const listStudyGroups = async (req, res) => {
   }
 };
 
+const getUniversityGroups = async (req, res) => {
+  try {
+    const universityId = req.params.universityId;
+    const groups = await groupService.getStudyGroupsByUniversity(universityId);
+    res.status(200).json(groups);
+  } catch (error) {
+    console.error('Error fetching university study groups:', error);
+    res.status(500).json({ message: 'Failed to fetch university study groups' });
+  }
+};
+
 // Get user's study groups (both those they own and have joined)
 const getUserGroups = async (req, res) => {
   try {
@@ -121,7 +132,7 @@ const leaveStudyGroup = async (req, res) => {
   }
 };
 
-// NEW: List all members of a study group
+// List all members of a study group
 const listMembers = async (req, res) => {
   try {
     const groupId = req.params.id;
@@ -132,7 +143,7 @@ const listMembers = async (req, res) => {
     res.status(500).json({ message: 'Failed to list group members' });
   }
 };
-// NEW: Remove a specific member from a study group
+// Remove a specific member from a study group
 const removeMember = async (req, res) => {
   try {
     const groupId = req.params.id;
@@ -151,6 +162,7 @@ const removeMember = async (req, res) => {
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
+  getUniversityGroups,
   getUserGroups,
   getGroupDetail,
   joinStudyGroup,
