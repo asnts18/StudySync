@@ -92,6 +92,17 @@ const studyGroupService = {
     }
   },
 
+  // Get all pending join requests for the current user
+  respondToJoinRequest: async (groupId, requestId, action) => {
+    try {
+      const response = await api.post(`/study-groups/${groupId}/requests/${requestId}`, { action });
+      return response.data;
+    } catch (error) {
+      console.error('Error responding to join request:', error);
+      throw error;
+    }
+  },
+  
 
   // Leave a study group
   leaveGroup: async (groupId) => {
@@ -137,16 +148,16 @@ const studyGroupService = {
     }
   },
 
-// Remove a member from a study group
-removeGroupMember: async (groupId, memberId) => {
-  try {
-    const response = await api.delete(`/study-groups/${groupId}/members/${memberId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error removing group member:', error);
-    throw error;
+  // Remove a member from a study group
+  removeGroupMember: async (groupId, memberId) => {
+    try {
+      const response = await api.delete(`/study-groups/${groupId}/members/${memberId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error removing group member:', error);
+      throw error;
+    }
   }
-}
 };
 
 export default studyGroupService;
