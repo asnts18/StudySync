@@ -539,7 +539,8 @@ const handleNotificationRequest = async (notificationId, action, userId) => {
       action,
       action === 'approve' ? 'Welcome to the group!' : 'Your request was rejected'
     ]);
-    
+
+
     // 6. Delete the notification
     await db.query('DELETE FROM Notifications WHERE notification_id = ?', [notificationId]);
     

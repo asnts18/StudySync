@@ -18,14 +18,28 @@ async function query(sql, params) {
 }
 
 // Helper function to call stored procedures
+// async function callProcedure(procedure, params = []) {
+//   const connection = await pool.getConnection();
+//   try {
+//     const [rows, fields] = await connection.execute(
+//       `CALL ${procedure}(${params.map(() => '?').join(',')})`, 
+//       params
+//     );
+//     return rows[0]; // Most stored procedures return a result set
+//   } finally {
+//     connection.release();
+//   }
+// }
+
 async function callProcedure(procedure, params = []) {
   const connection = await pool.getConnection();
   try {
-    const [rows, fields] = await connection.execute(
+    // This returns an array where the first element is the result sets
+    const [resultSets] = await connection.execute(
       `CALL ${procedure}(${params.map(() => '?').join(',')})`, 
       params
     );
-    return rows[0]; // Most stored procedures return a result set
+    return resultSets; // Return all result sets
   } finally {
     connection.release();
   }

@@ -161,13 +161,15 @@ const awardAchievement = async (groupId, ownerId, memberId, achievementId) => {
   try {
     console.log(`Awarding achievement ${achievementId} to member ${memberId}`);
     
-    // Call the stored procedure instead of multiple validation queries
+    // Call the stored procedure with adjusted result handling
     const result = await db.callProcedure('sp_AwardAchievement', [
       achievementId,
       memberId,
       ownerId
     ]);
     
+    // The message from the stored procedure will be in result[0][0] if it returns a message
+    // If no specific message handling is needed, we can return a standard success message
     return { success: true, message: 'Achievement awarded successfully' };
   } catch (error) {
     console.error('Error in awardAchievement:', error);

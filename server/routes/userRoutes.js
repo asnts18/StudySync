@@ -7,5 +7,6 @@ const { userProfileValidation } = require('../middleware/validators');
 
 router.get('/profile', authMiddleware.verifyToken, userController.getProfile);
 router.put('/profile', authMiddleware.verifyToken, userProfileValidation, userController.updateProfile);
+router.get('/metrics', authMiddleware.verifyToken, userController.getUserMetrics);
 
 module.exports = router;

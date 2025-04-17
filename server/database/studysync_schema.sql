@@ -868,3 +868,25 @@ END
 //
 
 DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER tr_AfterStudyGroupInsert
+AFTER INSERT ON StudyGroup
+FOR EACH ROW
+BEGIN
+    -- If a course is specified, ensure the owner is enrolled in it
+    IF NEW.course_code IS NOT NULL AND NEW.university_id IS NOT NULL THEN
+        -- Check if user is already enrolled
+        IF NOT EXISTS (SELECT 1 FROM User_Course 
+                      WHERE user_id = NEW.owner_id 
+                      AND course_code = NEW.course_code 
+                      AND university_id = NEW.university_id) THEN
+            -- Add the user to the course
+            INSERT INTO User_Course (user_id, course_code, university_id)
+            VALUES (NEW.owner_id, NEW.course_code, NEW.university_id);
+        END IF;
+    END IF;
+END//
+
+DELIMITER ;
