@@ -1,18 +1,16 @@
 // pages/GroupPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, BookOpen, Plus, CalendarClock, Calendar, Repeat, Edit, AlertCircle, Trash2, UserMinus, LogOut } from 'lucide-react';
+import React from 'react';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 import { useGroupPage } from './useGroupPage'; 
 import GroupHeader from './GroupHeader';
 import GroupDetailsSection from './GroupDetailsSection';
+// Import the updated GroupMembers component
 import GroupMembers from './GroupMembers';
 import GroupMeetings from './GroupMeetings';
 import ConfirmationModals from './ConfirmationModals';
 import GroupEditModal from './GroupEditModal';
-import { isBefore, isAfter, startOfDay } from 'date-fns';
-
 
 const GroupPage = () => {
   const { groupId } = useParams();
@@ -122,12 +120,14 @@ const GroupPage = () => {
         {/* Group Details */}
         <GroupDetailsSection group={group} />
 
-        {/* Members Section */}
+        {/* Members Section - Pass the additional props for achievements */}
         <GroupMembers 
           members={members}
           isOwner={isOwner}
           currentUserId={currentUser?.user_id}
+          groupId={groupId} // Add groupId for achievement functionality
           removeMemberError={removeMemberError}
+          removeMemberSuccess={removeMemberSuccess}
           onRemoveMember={handleRemoveMember}
         />
 
