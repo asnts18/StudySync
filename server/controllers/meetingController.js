@@ -1,5 +1,6 @@
 // server/controllers/meetingController.js
 const meetingService = require('../services/meetingService');
+const studyGroupService = require('../services/studygroupService');
 
 const createMeeting = async (req, res) => {
   try {
@@ -28,10 +29,70 @@ const getGroupMeetings = async (req, res) => {
   }
 };
 
-// todo: update meeting
-// todo: delete meeting
+const getMeetingById = async (req, res) => {
+  try {
+    const meetingId = req.params.meetingId;
+    const meeting = await meetingService.getMeetingById(meetingId);
+    res.status(200).json(meeting);
+  } catch (error) {
+    console.error("Error fetching meeting details:", error);
+    
+    if (error.message === 'Meeting not found') {
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+    
+    res.status(500).json({ message: "Failed to fetch meeting details" });
+  }
+};
+
+const updateMeeting = async (req, res) => {
+  try {
+    const meetingId = req.params.meetingId;
+    const userId = req.userId; // From auth middleware
+    
+    const meeting = await meetingService.updateMeeting(meetingId, req.body, userId);
+    res.status(200).json(meeting);
+  } catch (error) {
+    console.error("Error updating meeting:", error);
+    
+    if (error.message === 'Meeting not found') {
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+    
+    if (error.message === 'Not authorized to update this meeting') {
+      return res.status(403).json({ message: "You do not have permission to update this meeting" });
+    }
+    
+    res.status(500).json({ message: "Failed to update meeting" });
+  }
+};
+
+const deleteMeeting = async (req, res) => {
+  try {
+    const meetingId = req.params.meetingId;
+    const userId = req.userId; // From auth middleware
+    
+    const result = await meetingService.deleteMeeting(meetingId, userId);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error deleting meeting:", error);
+    
+    if (error.message === 'Meeting not found') {
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+    
+    if (error.message === 'Not authorized to delete this meeting') {
+      return res.status(403).json({ message: "You do not have permission to delete this meeting" });
+    }
+    
+    res.status(500).json({ message: "Failed to delete meeting" });
+  }
+};
 
 module.exports = {
   createMeeting,
-  getGroupMeetings
+  getGroupMeetings,
+  getMeetingById,
+  updateMeeting,
+  deleteMeeting
 };

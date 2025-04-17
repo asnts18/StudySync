@@ -1,5 +1,8 @@
 // controllers/studyGroupController.js
 const groupService = require('../services/studygroupService');
+const db = require('../config/db.config');
+
+
 
 const createStudyGroup = async (req, res) => {
   try {
@@ -216,8 +219,6 @@ const deleteStudyGroup = async (req, res) => {
   }
 };
 
-// TODO: Delete study group 
-
 
 const requestJoinGroup = async (req, res) => {
   try {
@@ -237,6 +238,32 @@ const requestJoinGroup = async (req, res) => {
   }
 };
 
+const getUserPendingRequests = async (req, res) => {
+  try {
+    const userId = req.userId; // From auth middleware
+    
+    // Query the database for pending join requests for groups OWNED by this user
+    const pendingRequests = await db.query(
+      `SELECT gjr.request_id, gjr.study_group_id, gjr.user_id, gjr.request_date, 
+              sg.name as group_name, sg.course_code, c.name as course_name,
+              u.first_name, u.last_name
+       FROM GroupJoinRequests gjr
+       JOIN StudyGroup sg ON gjr.study_group_id = sg.study_group_id
+       JOIN User u ON gjr.user_id = u.user_id
+       LEFT JOIN Course c ON sg.course_code = c.course_code AND sg.university_id = c.university_id
+       WHERE sg.owner_id = ? AND gjr.status = 'pending'
+       ORDER BY gjr.request_date DESC`,
+      [userId]
+    );
+    
+    console.log('Pending requests for owner:', pendingRequests);
+    res.status(200).json(pendingRequests);
+  } catch (error) {
+    console.error('Error fetching owner pending requests:', error);
+    res.status(500).json({ message: 'Failed to fetch pending requests' });
+  }
+};
+
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
@@ -249,5 +276,6 @@ module.exports = {
   leaveStudyGroup,
   listMembers,
   removeMember,
-  requestJoinGroup
+  requestJoinGroup,
+  getUserPendingRequests
 };
