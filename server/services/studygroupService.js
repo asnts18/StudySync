@@ -592,6 +592,128 @@ const respondToJoinRequest = async ({ request_id, owner_id, action }) => {
   return { success: true, action };
 };
 
+const handleNotificationRequest = async (notificationId, action, userId) => {
+  try {
+    // 1. Get the notification to extract the group name
+    const [notification] = await db.query(
+      'SELECT * FROM Notifications WHERE notification_id = ?',
+      [notificationId]
+    );
+    
+    if (!notification) {
+      throw new Error('Notification not found');
+    }
+    
+    // 2. Extract group name from the notification message
+    const regex = /New join request for your study group: (.+)/i;
+    const match = notification.message.match(regex);
+    const groupName = match ? match[1] : null;
+    
+    if (!groupName) {
+      throw new Error('Could not extract group name from notification');
+    }
+    
+    // 3. Find the group owned by the current user
+    const [groups] = await db.query(
+      'SELECT study_group_id FROM StudyGroup WHERE name = ? AND owner_id = ?',
+      [groupName, userId]
+    );
+    
+    if (!groups || groups.length === 0) {
+      throw new Error('Study group not found with name: ' + groupName);
+    }
+    
+    const group = groups[0];
+    
+    // 4. Find the pending join request for this group
+    const [pendingRequests] = await db.query(
+      `SELECT * FROM GroupJoinRequests 
+       WHERE study_group_id = ? AND status = 'pending'
+       ORDER BY request_date DESC LIMIT 1`,
+      [group.study_group_id]
+    );
+    
+    if (!pendingRequests || pendingRequests.length === 0) {
+      throw new Error('No pending join request found for group: ' + groupName);
+    }
+    
+    const pendingRequest = pendingRequests[0];
+    
+    // 5. Process the request using the existing stored procedure
+    await db.callProcedure('sp_ProcessJoinRequest', [
+      pendingRequest.user_id,
+      group.study_group_id,
+      action,
+      action === 'approve' ? 'Welcome to the group!' : 'Your request was rejected'
+    ]);
+    
+    // 6. Delete the notification
+    await db.query('DELETE FROM Notifications WHERE notification_id = ?', [notificationId]);
+    
+    return {
+      success: true,
+      message: `Join request ${action}ed successfully`,
+      group: groupName,
+      notificationId: notificationId
+    };
+  } catch (error) {
+    console.error(`Error processing notification request:`, error);
+    throw error;
+  }
+};
+
+const processByGroupName = async (groupName, action, userId) => {
+  try {
+    if (!groupName) {
+      throw new Error('Group name is required');
+    }
+    
+    // 1. Get the group by name
+    const [groups] = await db.query(
+      'SELECT study_group_id FROM StudyGroup WHERE name = ? AND owner_id = ?',
+      [groupName, userId]
+    );
+    
+    if (!groups || groups.length === 0) {
+      throw new Error('Study group not found with name: ' + groupName);
+    }
+    
+    const group = groups[0];
+    
+    // 2. Get the latest pending request for this group
+    const [pendingRequests] = await db.query(
+      `SELECT * FROM GroupJoinRequests 
+       WHERE study_group_id = ? AND status = 'pending'
+       ORDER BY request_date DESC LIMIT 1`,
+      [group.study_group_id]
+    );
+    
+    if (!pendingRequests || pendingRequests.length === 0) {
+      throw new Error('No pending join request found for group: ' + groupName);
+    }
+    
+    const pendingRequest = pendingRequests[0];
+    
+    // 3. Process the request using the existing stored procedure
+    await db.callProcedure('sp_ProcessJoinRequest', [
+      pendingRequest.user_id,
+      group.study_group_id,
+      action,
+      action === 'approve' ? 'Welcome to the group!' : 'Your request was rejected'
+    ]);
+    
+    return {
+      success: true,
+      message: `Join request ${action}ed successfully`,
+      group: groupName
+    };
+  } catch (error) {
+    console.error(`Error processing request by group name:`, error);
+    throw error;
+  }
+};
+
+
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
@@ -606,5 +728,7 @@ module.exports = {
   removeGroupMember,
   requestJoinGroup,
   listPendingRequests,
-  respondToJoinRequest
+  respondToJoinRequest,
+  handleNotificationRequest,
+  processByGroupName
 };
