@@ -1,5 +1,5 @@
 // server/models/user.model.js
-const DatabaseService = require('../services/db.service');
+const DatabaseService = require('../services/dbService');
 
 class UserModel extends DatabaseService {
   constructor() {

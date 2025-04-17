@@ -33,17 +33,6 @@ const notificationService = {
       console.error('Error deleting notification:', error);
       throw error;
     }
-  },
-  
-  // Mark all notifications as read
-  markAllAsRead: async () => {
-    try {
-      const response = await api.put('/notifications/mark-all-read');
-      return response.data;
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-      throw error;
-    }
   }
 };
 

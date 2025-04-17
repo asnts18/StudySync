@@ -1,4 +1,4 @@
-// controllers/achievementController.js
+// server/controllers/achievementController.js
 const achievementService = require('../services/achievementService');
 
 exports.createAchievement = async (req, res) => {

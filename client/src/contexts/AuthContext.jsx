@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
@@ -30,7 +31,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError('');
       
-      // This matches the format expected by your auth.controller.js signup method
       const response = await api.post('/auth/signup', {
         email: userData.email,
         password: userData.password,
@@ -40,10 +40,6 @@ export const AuthProvider = ({ children }) => {
         university_id: userData.university_id || null
       });
       
-      // Handle successful registration
-      console.log('Registration successful:', response.data);
-      
-      // Redirect to login after registration
       navigate('/login', { 
         state: { message: 'Registration successful! Please log in.' }
       });
@@ -64,20 +60,18 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError('');
       
-      // This matches your auth.controller.js signin method
       const response = await api.post('/auth/signin', { email, password });
       
-      // Based on your auth.controller.js, the token is returned as accessToken
+      // Store token
       localStorage.setItem('token', response.data.accessToken);
       
-      // Store user info without the password
-      const { password: _, ...userWithoutPassword } = response.data;
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+      // Store user info - make sure password is not included
+      const userWithoutPassword = { ...response.data };
+      delete userWithoutPassword.password;
       
-      // Update current user state
+      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
       setCurrentUser(userWithoutPassword);
       
-      // Redirect to home page
       navigate('/home');
       
       return userWithoutPassword;
@@ -98,20 +92,38 @@ export const AuthProvider = ({ children }) => {
     navigate('/');
   };
 
-  // Update user profile
+  // Update user profile - simplified version
   const updateProfile = async (userData) => {
     try {
       setLoading(true);
       setError('');
       
+      // Log the data we're sending
+      console.log("Updating profile with:", userData);
+      
+      // Update profile
       const response = await api.put('/users/profile', userData);
       
-      // Update stored user data
-      const updatedUser = { ...currentUser, ...response.data };
+      // Log the raw response
+      console.log("Raw update response:", response);
+      
+      // Extract user info - handle both flat and nested structure possibilities
+      let updatedUserData = response.data;
+      
+      // Update the current user with the new data, keeping any existing properties
+      const updatedUser = { 
+        ...currentUser, 
+        ...userData,  // Include the data we submitted (as fallback)
+        ...updatedUserData // Override with server response data
+      };
+      
+      console.log("Final updated user:", updatedUser);
+      
+      // Save to localStorage and state
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setCurrentUser(updatedUser);
       
-      return response.data;
+      return updatedUser;
     } catch (err) {
       console.error('Profile update error:', err);
       setError(err.response?.data?.message || 'Failed to update profile');
@@ -121,20 +133,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Get current user profile
+  // Get current user profile - simplified
   const getProfile = async () => {
     try {
       setLoading(true);
       setError('');
       
       const response = await api.get('/users/profile');
+      console.log("Raw profile response:", response);
       
-      // Update stored user data
-      const updatedUser = { ...currentUser, ...response.data };
+      // Extract profile data (might be nested)
+      const profileData = response.data;
+      
+      // Update the current user with the new data, keeping original properties
+      const updatedUser = { ...currentUser, ...profileData };
+      console.log("Updated user after get profile:", updatedUser);
+      
+      // Save to localStorage and state
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setCurrentUser(updatedUser);
       
-      return response.data;
+      return updatedUser;
     } catch (err) {
       console.error('Get profile error:', err);
       setError(err.response?.data?.message || 'Failed to fetch profile');
@@ -144,8 +163,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
   
-  
-
   const value = {
     currentUser,
     loading,

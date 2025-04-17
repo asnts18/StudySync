@@ -138,14 +138,17 @@ const createGroupAchievement = async (groupId, ownerId, { name, description }) =
       [name, description || null, parsedGroupId]
     );
     
+    
     console.log('Group achievement created with ID:', result.insertId);
     
-    const rows = await db.query('SELECT * FROM Achievements WHERE achievement_id = ?', [result.insertId]);
+    // Get the single created achievement (not as array)
+    const [rows] = await db.query('SELECT * FROM Achievements WHERE achievement_id = ?', [result.insertId]);
     
     if (!rows || rows.length === 0) {
       throw new Error('Failed to retrieve created achievement');
     }
     
+    // Return a single object, not an array
     return rows[0];
   } catch (error) {
     console.error('Error in createGroupAchievement:', error);
@@ -156,67 +159,16 @@ const createGroupAchievement = async (groupId, ownerId, { name, description }) =
 // ────────── 2. award an achievement to a member ──────────────────
 const awardAchievement = async (groupId, ownerId, memberId, achievementId) => {
   try {
-    console.log(`Awarding achievement ${achievementId} to member ${memberId} in group ${groupId} by owner ${ownerId}`);
+    console.log(`Awarding achievement ${achievementId} to member ${memberId}`);
     
-    // Parse all IDs to ensure they're numbers
-    const parsedGroupId = parseInt(groupId, 10);
-    const parsedOwnerId = parseInt(ownerId, 10);
-    const parsedMemberId = parseInt(memberId, 10);
-    const parsedAchievementId = parseInt(achievementId, 10);
+    // Call the stored procedure instead of multiple validation queries
+    const result = await db.callProcedure('sp_AwardAchievement', [
+      achievementId,
+      memberId,
+      ownerId
+    ]);
     
-    if (isNaN(parsedGroupId) || isNaN(parsedOwnerId) || isNaN(parsedMemberId) || isNaN(parsedAchievementId)) {
-      console.error('Invalid ID(s):', { groupId, ownerId, memberId, achievementId });
-      throw new Error('Invalid ID parameters');
-    }
-    
-    // Check if owner
-    await assertIsOwner(parsedGroupId, parsedOwnerId);
-    
-    // Check if the member exists
-    const memberRows = await db.query('SELECT user_id FROM User WHERE user_id = ?', [parsedMemberId]);
-    if (!memberRows || memberRows.length === 0) {
-      throw new Error(`Member with ID ${memberId} not found`);
-    }
-    
-    // Check if the member is in the group
-    const memberInGroupRows = await db.query(
-      'SELECT * FROM User_StudyGroup WHERE user_id = ? AND study_group_id = ?',
-      [parsedMemberId, parsedGroupId]
-    );
-    if (!memberInGroupRows || memberInGroupRows.length === 0) {
-      throw new Error(`Member with ID ${memberId} is not in group ${groupId}`);
-    }
-    
-    // Check if the achievement exists and belongs to this group or is a platform achievement
-    const achievementRows = await db.query(
-      'SELECT * FROM Achievements WHERE achievement_id = ?',
-      [parsedAchievementId]
-    );
-    
-    if (!achievementRows || achievementRows.length === 0) {
-      throw new Error(`Achievement with ID ${achievementId} not found`);
-    }
-    
-    const achievement = achievementRows[0];
-    
-    // Check if this is a group-specific achievement that belongs to this group
-    if (!achievement.is_platform_default && achievement.group_id !== parsedGroupId) {
-      throw new Error(`Achievement with ID ${achievementId} does not belong to group ${groupId}`);
-    }
-    
-    // Upsert pattern: ignore duplicates
-    try {
-      await db.query(
-        'INSERT IGNORE INTO UserAchievements (user_id, achievement_id) VALUES (?, ?)',
-        [parsedMemberId, parsedAchievementId]
-      );
-      
-      console.log(`Successfully awarded achievement ${achievementId} to member ${memberId}`);
-      return { success: true, message: 'Achievement awarded successfully' };
-    } catch (insertError) {
-      console.error('Error inserting into UserAchievements:', insertError);
-      throw new Error(`Failed to award achievement: ${insertError.message}`);
-    }
+    return { success: true, message: 'Achievement awarded successfully' };
   } catch (error) {
     console.error('Error in awardAchievement:', error);
     throw error;
@@ -265,7 +217,6 @@ const revokeAchievement = async (groupId, ownerId, memberId, achievementId) => {
   }
 };
 
-// New function: Get user achievements
 const getUserAchievements = async (userId) => {
   try {
     console.log(`Getting achievements for user ${userId}`);
@@ -275,12 +226,11 @@ const getUserAchievements = async (userId) => {
       throw new Error(`Invalid user ID: ${userId}`);
     }
     
-    const achievements = await db.query(`
-      SELECT a.* 
-      FROM Achievements a
-      JOIN UserAchievements ua ON a.achievement_id = ua.achievement_id
-      WHERE ua.user_id = ?
-    `, [parsedUserId]);
+    // Use the view instead of joins
+    const achievements = await db.query(
+      'SELECT * FROM vw_UserAchievements WHERE user_id = ?', 
+      [parsedUserId]
+    );
     
     console.log(`Found ${achievements.length} achievements for user ${userId}`);
     return achievements;
@@ -290,7 +240,6 @@ const getUserAchievements = async (userId) => {
   }
 };
 
-// New function: Get group achievements
 const getGroupAchievements = async (groupId) => {
   try {
     console.log(`Getting achievements for group ${groupId}`);

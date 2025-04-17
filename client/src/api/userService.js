@@ -11,13 +11,9 @@ const userService = {
   updateProfile: async (userData) => {
     const response = await api.put('/users/profile', userData);
     return response.data;
-  },
-
-  // TODO: Get user profile with achievements (when endpoint is implemented)
-  getProfileWithAchievements: async () => {
-    const response = await api.get('/users/profile/complete');
-    return response.data;
   }
+
+
 };
 
 export default userService;

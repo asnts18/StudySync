@@ -29,7 +29,6 @@ const ProfilePage = () => {
             </button>
             <h1 className="text-4xl font-bold">my profile</h1>
           </div>
-          {/* Edit profile button */}
           <button 
             onClick={() => navigate('/profile/edit')} 
             className="flex items-center gap-2 px-4 py-2 border-2 border-black bg-primary-yellow hover:bg-dark-yellow transition-colors"
@@ -81,6 +80,14 @@ const ProfilePage = () => {
               <div className="text-center">
                 <p className="text-3xl font-bold">0</p>
                 <p className="text-sm text-gray-500">Study Groups</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold">0</p>
+                <p className="text-sm text-gray-500">Sessions</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold">0</p>
+                <p className="text-sm text-gray-500">Hours</p>
               </div>
             </div>
           </div>

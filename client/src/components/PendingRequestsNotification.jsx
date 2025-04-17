@@ -88,36 +88,66 @@ const PendingRequestsNotification = () => {
         return;
       }
       
-      // Find the related request by matching the group name
-      const matchingRequest = pendingRequests.find(req => 
-        req.group_name === groupName || 
-        req.name === groupName
-      );
-      
       console.log('Looking for matching request with group name:', groupName);
       console.log('Available pending requests:', pendingRequests);
-      console.log('Matching request found:', matchingRequest);
       
-      if (!matchingRequest) {
-        alert(`Unable to find a pending request for group "${groupName}". The request may have already been processed.`);
-        return;
+      // Find all pending requests and log them to see their structure
+      const pendingRequestsForGroup = pendingRequests.filter(req => {
+        const groupMatches = (req.group_name === groupName || req.name === groupName);
+        console.log(`Request for: ${req.group_name || req.name}, matches: ${groupMatches}`);
+        return groupMatches;
+      });
+      
+      console.log('Filtered requests for this group:', pendingRequestsForGroup);
+      
+      // If we found matching requests, use the first one
+      if (pendingRequestsForGroup.length > 0) {
+        const matchingRequest = pendingRequestsForGroup[0];
+        
+        console.log('Using matched request:', matchingRequest);
+        
+        // Process the request using respondToJoinRequest
+        // This will use the existing database trigger
+        await studyGroupService.respondToJoinRequest(
+          matchingRequest.study_group_id, 
+          matchingRequest.request_id, 
+          action
+        );
+        
+        console.log(`Successfully ${action}ed request`);
+        
+        // Delete the notification
+        await notificationService.deleteNotification(notificationId);
+        
+        // Refresh data
+        await fetchData();
+      } else {
+        // If no matching request found by direct comparison, try the API method
+        console.log('No direct match found, trying processByGroupName API...');
+        
+        try {
+          // This method handles finding the correct request by group name
+          const result = await studyGroupService.processByGroupName(
+            groupName,
+            action
+          );
+          
+          console.log('processByGroupName result:', result);
+          
+          if (result.success) {
+            // Delete the notification
+            await notificationService.deleteNotification(notificationId);
+            
+            // Refresh data
+            await fetchData();
+          } else {
+            throw new Error(result.message || 'Failed to process request');
+          }
+        } catch (apiError) {
+          console.error('Error with processByGroupName:', apiError);
+          alert(`Unable to find a pending request for group "${groupName}". The request may have already been processed.`);
+        }
       }
-      
-      // Process the request using the existing service method
-      await studyGroupService.respondToJoinRequest(
-        matchingRequest.study_group_id, 
-        matchingRequest.request_id, 
-        action
-      );
-      
-      console.log(`Successfully ${action}ed request`);
-      
-      // Delete the notification
-      await notificationService.deleteNotification(notificationId);
-      
-      // Refresh data
-      await fetchData();
-      
     } catch (error) {
       console.error(`Error ${action}ing request:`, error);
       alert(`Error processing the request. Please try again later.`);

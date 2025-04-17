@@ -1,4 +1,4 @@
-// controllers/tagController.js
+// server/controllers/tagController.js
 const tagService = require('../services/tagService');
 
 const getAllTags = async (req, res) => {
