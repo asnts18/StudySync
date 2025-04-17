@@ -77,7 +77,7 @@ const JoinGroupConfirmation = ({ group, onClose, onSuccess }) => {
             {/* Group details */}
             <div className="mb-6 p-3 border border-gray-200 bg-gray-50">
               <p className="font-medium">{group.name}</p>
-              <p className="text-sm text-gray-600">{group.currentMembers}/{group.maxMembers} members</p>
+              <p className="text-sm text-gray-600">{group.current_members}/{group.maxMembers} members</p>
               {group.course_code && (
                 <p className="text-sm text-gray-600">
                   {group.course_code}{group.course_name ? `: ${group.course_name}` : ''}

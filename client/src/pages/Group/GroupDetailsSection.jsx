@@ -14,7 +14,7 @@ const GroupDetailsSection = ({ group }) => {
             <p className="text-sm text-gray-500">Members</p>
             <p className="text-lg flex items-center gap-2">
               <Users className="w-5 h-5" />
-              {group.currentMembers}/{group.maxMembers} members
+              {group.current_members}/{group.maxMembers} members
             </p>
           </div>
           

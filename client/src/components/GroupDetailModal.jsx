@@ -43,7 +43,7 @@ const GroupDetailModal = ({ group, onClose }) => {
                 <Users className="w-4 h-4" />
                 <span className="font-medium">Members</span>
               </div>
-              <p className="mt-1 text-left">{group.currentMembers}/{group.maxMembers} members</p>
+              <p className="mt-1 text-left">{group.current_members}/{group.maxMembers} members</p>
             </div>
             
             <div className="border-2 border-black p-4">
@@ -55,15 +55,6 @@ const GroupDetailModal = ({ group, onClose }) => {
                 {group.course_code ? `${group.course_code}${group.course_name ? `: ${group.course_name}` : ''}` : 'No specific course'}
               </p>
             </div>
-          </div>
-
-          {/* Created Date */}
-          <div className="border-2 border-black p-4">
-            <div className="flex items-center gap-2 text-black">
-              <Calendar className="w-4 h-4" />
-              <span className="font-medium">Created</span>
-            </div>
-            <p className="mt-1 text-left">{formattedCreatedDate}</p>
           </div>
 
           {/* Study Style Tags */}

@@ -85,7 +85,7 @@ const StudyGroupCard = ({
         <div className="flex flex-col gap-2 mb-3">
           <div className="flex items-center gap-2 text-gray-700">
             <Users className="w-4 h-4" />
-            <span>{group.currentMembers}/{group.maxMembers} members</span>
+            <span>{group.current_members}/{group.maxMembers} members</span>
           </div>
           {group.course_code && (
             <div className="flex items-center gap-2 text-gray-700">
