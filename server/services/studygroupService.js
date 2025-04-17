@@ -140,17 +140,25 @@ const deleteStudyGroup = async (groupId, userId) => {
 const listStudyGroups = async (filters) => {
   try {
     let sql = `
-      SELECT sg.*, 
-        (SELECT COUNT(*) FROM User_StudyGroup usg WHERE usg.study_group_id = sg.study_group_id) as current_members,
-        m.location,
+    SELECT
+      sg.*,
+      (SELECT COUNT(*) FROM User_StudyGroup usg
+       WHERE usg.study_group_id = sg.study_group_id)  AS current_members,
+      ANY_VALUE(m.location)                           AS location,
+      ANY_VALUE(
         CONCAT(
-          TIME_FORMAT(m.start_time, '%h:%i%p'), ' - ', 
-          TIME_FORMAT(m.end_time, '%h:%i%p')
-        ) as meeting_time
-      FROM StudyGroup sg
-      LEFT JOIN Meeting m ON sg.study_group_id = m.study_group_id
-    `;
-    
+          TIME_FORMAT(m.start_time, '%h:%i%p'), ' - ',
+          TIME_FORMAT(m.end_time,   '%h:%i%p')
+        )
+      ) AS meeting_time
+    FROM StudyGroup sg
+    LEFT JOIN Meeting m
+      ON sg.study_group_id = m.study_group_id
+  `;
+
+  /* … filters exactly like before … */
+
+  sql += ' GROUP BY sg.study_group_id';
     let conditions = [];
     let params = [];
 
@@ -517,6 +525,73 @@ const requestJoinGroup = async ({ study_group_id, user_id }) => {
   }
 };
 
+/**
+ * Return every pending request for one group (owner‑only helper)
+ */
+const listPendingRequests = async (study_group_id) => {
+  return db.query(
+    `SELECT r.request_id, r.user_id, u.first_name, u.last_name, r.request_date
+       FROM GroupJoinRequests r
+       JOIN User u ON u.user_id = r.user_id
+      WHERE r.study_group_id = ? AND r.status = 'pending'`,
+    [study_group_id]
+  );
+};
+
+/**
+ * Approve OR reject a pending join request.
+ *   action === 'approve' | 'reject'
+ */
+const respondToJoinRequest = async ({ request_id, owner_id, action }) => {
+  // 1) pull the request & owning group
+  const [reqRow] = await db.query(
+    `SELECT r.*, g.owner_id 
+       FROM GroupJoinRequests r
+       JOIN StudyGroup g ON g.study_group_id = r.study_group_id
+      WHERE r.request_id = ?`,
+    [request_id]
+  );
+
+  if (!reqRow) throw new Error('Join request not found');
+  if (reqRow.owner_id !== owner_id)
+    throw new Error('Only the group owner can respond to join requests');
+  if (reqRow.status !== 'pending')
+    throw new Error('Request has already been processed');
+
+  // 2) begin tx ‑‑ guarantees consistency
+  const connection = await db.pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    if (action === 'approve') {
+      // add member
+      await connection.execute(
+        `INSERT IGNORE INTO User_StudyGroup (user_id, study_group_id)
+         VALUES (?, ?)`,
+        [reqRow.user_id, reqRow.study_group_id]
+      );
+    }
+
+    // 3) update request row
+    await connection.execute(
+      `UPDATE GroupJoinRequests
+          SET status        = ?,
+              response_date = NOW()
+        WHERE request_id    = ?`,
+      [action === 'approve' ? 'approved' : 'rejected', request_id]
+    );
+
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    throw err;
+  } finally {
+    connection.release();
+  }
+
+  return { success: true, action };
+};
+
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
@@ -529,5 +604,7 @@ module.exports = {
   leaveStudyGroup,
   listGroupMembers,
   removeGroupMember,
-  requestJoinGroup
+  requestJoinGroup,
+  listPendingRequests,
+  respondToJoinRequest
 };

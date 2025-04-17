@@ -14,7 +14,8 @@ router.get('/', groupController.listStudyGroups);
 router.get('/university/:universityId', groupController.getUniversityGroups);
 router.get('/:id', groupController.getGroupDetail);
 
-router.get('/join-requests', auth.verifyToken, groupController.getUserPendingRequests);
+router.get('/join-requests', auth.verifyToken, groupController.getPendingRequests);
+// TODO: accept request
 
 router.post('/:id/join', auth.verifyToken, groupController.joinStudyGroup);
 router.delete('/:id/members', auth.verifyToken, groupController.leaveStudyGroup);

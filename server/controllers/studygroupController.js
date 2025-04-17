@@ -238,29 +238,37 @@ const requestJoinGroup = async (req, res) => {
   }
 };
 
-const getUserPendingRequests = async (req, res) => {
+// list all pending requests in this group (owner only)
+const getPendingRequests = async (req, res) => {
   try {
-    const userId = req.userId; // From auth middleware
-    
-    // Query the database for pending join requests for groups OWNED by this user
-    const pendingRequests = await db.query(
-      `SELECT gjr.request_id, gjr.study_group_id, gjr.user_id, gjr.request_date, 
-              sg.name as group_name, sg.course_code, c.name as course_name,
-              u.first_name, u.last_name
-       FROM GroupJoinRequests gjr
-       JOIN StudyGroup sg ON gjr.study_group_id = sg.study_group_id
-       JOIN User u ON gjr.user_id = u.user_id
-       LEFT JOIN Course c ON sg.course_code = c.course_code AND sg.university_id = c.university_id
-       WHERE sg.owner_id = ? AND gjr.status = 'pending'
-       ORDER BY gjr.request_date DESC`,
-      [userId]
-    );
-    
-    console.log('Pending requests for owner:', pendingRequests);
-    res.status(200).json(pendingRequests);
-  } catch (error) {
-    console.error('Error fetching owner pending requests:', error);
-    res.status(500).json({ message: 'Failed to fetch pending requests' });
+    const study_group_id = req.params.id;
+    const owner_id       = req.userId;
+
+    const requests = await groupService.listPendingRequests(study_group_id, owner_id);
+    res.status(200).json(requests);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ message: err.message || 'Could not fetch requests' });
+  }
+};
+
+// approve / reject
+const respondToJoinRequest = async (req, res) => {
+  try {
+    const { id: study_group_id, requestId } = req.params;
+    const { action } = req.body; // 'approve' or 'reject'
+    if (!['approve', 'reject'].includes(action))
+      return res.status(400).json({ message: 'action must be approve | reject' });
+
+    const result = await groupService.respondToJoinRequest({
+      request_id : requestId,
+      owner_id   : req.userId,
+      action
+    });
+    res.status(200).json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ message: err.message || 'Could not process request' });
   }
 };
 
@@ -277,5 +285,6 @@ module.exports = {
   listMembers,
   removeMember,
   requestJoinGroup,
-  getUserPendingRequests
+  getPendingRequests,
+  respondToJoinRequest
 };
