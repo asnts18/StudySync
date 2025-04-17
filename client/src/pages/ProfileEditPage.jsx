@@ -89,8 +89,11 @@ const ProfileEditPage = () => {
     }
     
     try {
+      console.log("Submitting form data:", formData);
+      
       // Use updateProfile function from AuthContext
       await updateProfile(formData);
+      
       setIsSuccess(true);
       setMessage('Profile updated successfully!');
       
