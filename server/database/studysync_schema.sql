@@ -163,131 +163,342 @@ CREATE TABLE Notifications (
 -- INSERT STATEMENTS FOR INITIAL DATA
 -- --------------------------------------------------------------------
 
+-- Insert more Universities (Adding Boston schools)
 -- Insert Universities
-INSERT INTO University (name, location) VALUES
-('University of California, Berkeley', 'Berkeley, CA'),
-('Stanford University', 'Stanford, CA'),
-('Massachusetts Institute of Technology', 'Cambridge, MA'),
-('Harvard University', 'Cambridge, MA'),
-('University of Washington', 'Seattle, WA');
+-- Insert Universities with specific IDs to match existing references
+INSERT INTO University (university_id, name, location) VALUES
+(1, 'University of California, Berkeley', 'Berkeley, CA'),
+(2, 'Stanford University', 'Stanford, CA'),
+(3, 'Massachusetts Institute of Technology', 'Cambridge, MA'),
+(4, 'Harvard University', 'Cambridge, MA'),
+(5, 'Princeton University', 'Princeton, NJ'),
+(6, 'Boston University', 'Boston, MA'),
+(7, 'Northeastern University', 'Boston, MA'),
+(8, 'Boston College', 'Chestnut Hill, MA'),
+(9, 'Tufts University', 'Medford, MA'),
+(10, 'Emerson College', 'Boston, MA'),
+(11, 'Suffolk University', 'Boston, MA'),
+(12, 'Berklee College of Music', 'Boston, MA'),
+(13, 'Simmons University', 'Boston, MA');
 
--- Insert Users (passwords are hashed versions of 'password123')
+-- Insert additional Users (password should be hashed in real implementation)
+-- Using the same hashed password as in original script: '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG'
 INSERT INTO User (email, password, first_name, last_name, bio, university_id) VALUES
-('alice@berkeley.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Alice', 'Johnson', 'Computer Science major interested in AI', 1),
-('bob@stanford.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Bob', 'Smith', 'Math enthusiast and study group organizer', 2),
-('charlie@mit.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Charlie', 'Brown', 'Engineering student focused on robotics', 3),
-('diana@harvard.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Diana', 'Prince', 'Pre-med student looking for study partners', 4),
-('evan@uw.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Evan', 'Williams', 'Business and Computer Science double major', 5),
-('frank@uw.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Frank', 'Miller', 'Physics major', 5),
-('grace@berkeley.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Grace', 'Lee', 'Chemistry student', 1),
-('henry@stanford.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Henry', 'Garcia', 'Economics major', 2);
+-- Boston University students
+('jordan@bu.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Jordan', 'Parker', 'Computer Science major focusing on AI and Machine Learning', 6),
+('taylor@bu.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Taylor', 'Smith', 'Biology pre-med student with interest in research', 6),
+('alex@bu.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Alex', 'Johnson', 'Business major with a minor in Computer Science', 6),
+('morgan@bu.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Morgan', 'Williams', 'Linguistics major with interest in natural language processing', 6),
 
--- Insert Courses
+-- Northeastern University students
+('casey@northeastern.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Casey', 'Brown', 'Engineering student specializing in robotics', 7),
+('jamie@northeastern.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Jamie', 'Davis', 'Psychology major with research focus on cognitive development', 7),
+('riley@northeastern.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Riley', 'Garcia', 'Information Science major with data analysis concentration', 7),
+('avery@northeastern.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Avery', 'Martinez', 'Mechanical Engineering student interested in sustainable design', 7),
+
+-- Boston College students
+('quinn@bc.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Quinn', 'Rodriguez', 'Finance major with interest in investment banking', 8),
+('sasha@bc.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Sasha', 'Wilson', 'Communications student focusing on digital media', 8),
+('devon@bc.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Devon', 'Taylor', 'History major with minor in Political Science', 8),
+('jordan@bc.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Jordan', 'Thomas', 'Biology major on pre-med track with genetics focus', 8),
+
+-- Harvard University students (existing university in database)
+('mike@harvard.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Mike', 'Anderson', 'Computer Science student with focus on algorithms', 4),
+('sarah@harvard.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Sarah', 'Lee', 'Economics major with interest in behavioral economics', 4),
+('james@harvard.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'James', 'White', 'Physics student researching quantum computing', 4),
+('emma@harvard.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Emma', 'Clark', 'English literature major focusing on modern fiction', 4),
+
+-- MIT students (existing university in database)
+('david@mit.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'David', 'Chen', 'Computer Science with focus on cybersecurity', 3),
+('olivia@mit.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Olivia', 'Khan', 'Mathematics major specializing in cryptography', 3),
+('ethan@mit.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Ethan', 'Patel', 'Engineering student with interest in sustainable energy', 3),
+('zoe@mit.edu', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrYVJY52J3R0fRmpVj3vL4G.fWrJzFG', 'Zoe', 'Nguyen', 'Biology major researching genetic engineering', 3);
+
+-- Insert additional Courses for Boston schools
 INSERT INTO Course (course_code, university_id, name, semester, description, course_type) VALUES
-('CS61A', 1, 'Structure and Interpretation of Computer Programs', 'Fall 2023', 'Introduction to programming and computer science', 'Core'),
-('MATH51', 2, 'Linear Algebra and Differential Calculus', 'Winter 2023', 'Fundamentals of linear algebra and calculus', 'Core'),
-('6.006', 3, 'Introduction to Algorithms', 'Spring 2023', 'Algorithm design and analysis', 'Core'),
-('CS50', 4, 'Introduction to Computer Science', 'Fall 2023', 'Intro computer science course', 'Elective'),
-('INFO340', 5, 'Client-Side Development', 'Spring 2023', 'Web development wcith JavaScript and frameworks', 'Core');
+-- Boston University courses
+('CS330', 6, 'Introduction to Algorithms', 'Fall 2024', 'Theoretical foundations of computer science and practical algorithm design', 'Core'),
+('CS440', 6, 'Artificial Intelligence', 'Fall 2024', 'Introduction to AI principles and applications', 'Elective'),
+('BIO315', 6, 'Molecular Biology', 'Spring 2024', 'Study of biological activity at the molecular level', 'Core'),
+('BUS250', 6, 'Business Analytics', 'Fall 2024', 'Data-driven approach to business decision making', 'Core'),
 
--- Insert User_Course relationships (enrollments)
+-- Northeastern University courses
+('EECE2150', 7, 'Circuits and Signals', 'Fall 2024', 'Fundamentals of electrical circuit analysis', 'Core'),
+('CS3200', 7, 'Database Design', 'Spring 2024', 'Design and implementation of database systems', 'Core'),
+('PSYC3404', 7, 'Developmental Psychology', 'Fall 2024', 'Human development across the lifespan', 'Core'),
+('DS3000', 7, 'Foundations of Data Science', 'Fall 2024', 'Introduction to data science workflows and tools', 'Core'),
+
+-- Boston College courses
+('CSCI2227', 8, 'Introduction to Scientific Computation', 'Fall 2024', 'Scientific problem solving with computers', 'Core'),
+('ECON2201', 8, 'Microeconomic Theory', 'Spring 2024', 'Analysis of economic decision-making by individuals and firms', 'Core'),
+('HIST2180', 8, 'Modern American History', 'Fall 2024', 'American history from 1945 to present', 'Elective'),
+('BIOL2000', 8, 'Molecules and Cells', 'Fall 2024', 'Basic principles of molecular and cellular biology', 'Core'),
+
+-- Additional Harvard courses
+('CS124', 4, 'Data Structures and Algorithms', 'Fall 2024', 'Fundamental algorithms and data structures', 'Core'),
+('ECON1010', 4, 'Microeconomic Theory', 'Fall 2024', 'Analytical approach to the study of economics', 'Core'),
+('PHYS16', 4, 'Mechanics and Special Relativity', 'Spring 2024', 'Classical mechanics and introduction to special relativity', 'Core'),
+('ENGL197', 4, 'Contemporary Fiction', 'Fall 2024', 'Analysis of 21st century fiction works', 'Elective'),
+
+-- Additional MIT courses
+('6.046', 3, 'Design and Analysis of Algorithms', 'Fall 2024', 'Advanced algorithm design and analysis techniques', 'Core'),
+('18.404', 3, 'Theory of Computation', 'Spring 2024', 'Mathematical foundation of theoretical computer science', 'Core'),
+('2.007', 3, 'Design and Manufacturing', 'Fall 2024', 'Introduction to design and manufacturing in mechanical engineering', 'Core'),
+('7.012', 3, 'Introductory Biology', 'Fall 2024', 'Fundamentals of molecular biology and genetics', 'Core');
+
+-- Enroll users in courses
 INSERT INTO User_Course (user_id, course_code, university_id) VALUES
-(1, 'CS61A', 1),
-(2, 'MATH51', 2),
-(3, '6.006', 3),
-(4, 'CS50', 4),
-(5, 'INFO340', 5),
-(1, 'MATH51', 2),  -- Alice is also taking a course at Stanford
-(2, 'CS61A', 1);  -- Bob is also taking a course at Berkeley
+-- Boston University students enrollments
+(6, 'CS330', 6), (6, 'CS440', 6),
+(7, 'BIO315', 6), (7, 'BUS250', 6),
+(8, 'BUS250', 6), (8, 'CS330', 6),
+(9, 'CS330', 6), (9, 'BIO315', 6),
 
--- Insert StudyGroups
+-- Northeastern University students enrollments
+(10, 'EECE2150', 7), (10, 'CS3200', 7),
+(11, 'PSYC3404', 7), (11, 'DS3000', 7),
+(12, 'DS3000', 7), (12, 'CS3200', 7),
+(13, 'EECE2150', 7), (13, 'DS3000', 7),
+
+-- Boston College students enrollments
+(14, 'CSCI2227', 8), (14, 'ECON2201', 8),
+(15, 'ECON2201', 8), (15, 'HIST2180', 8),
+(16, 'HIST2180', 8), (16, 'CSCI2227', 8),
+(17, 'BIOL2000', 8), (17, 'HIST2180', 8),
+
+-- Harvard students enrollments
+(1, 'CS124', 4), (1, 'PHYS16', 4),
+(2, 'ECON1010', 4), (2, 'CS124', 4),
+(3, 'PHYS16', 4), (3, 'CS124', 4),
+(4, 'ENGL197', 4), (4, 'ECON1010', 4),
+
+-- MIT students enrollments
+(5, '6.046', 3), (5, '18.404', 3),
+(6, '18.404', 3), (6, '7.012', 3),
+(7, '2.007', 3), (7, '6.046', 3),
+(8, '7.012', 3), (8, '2.007', 3);
+
 INSERT INTO StudyGroup (name, description, owner_id, course_code, university_id, max_capacity, is_private, created_at) VALUES
-('CS61A Study Buddies', 'Group for working through CS61A problem sets', 1, 'CS61A', 1, 6, FALSE, '2023-09-01 10:00:00'),
-('MATH51 Warriors', 'Collaborative group for MATH51 homework', 2, 'MATH51', 2, 8, FALSE, '2023-09-02 11:30:00'),
-('Algorithms Club', 'Advanced study group for 6.006', 3, '6.006', 3, 4, TRUE, '2023-09-03 14:15:00'),
-('CS50 Harvard', 'Official study group for CS50 students', 4, 'CS50', 4, 5, FALSE, '2023-09-04 09:00:00'),
-('Web Dev Masters', 'Group for INFO340 projects', 5, 'INFO340', 5, 8, FALSE, '2023-09-05 16:45:00');
+-- Boston University study groups (university_id 6)
+('CS330 Algorithm Masters', 'Advanced study group for CS330 algorithm design', 6, 'CS330', 6, 6, FALSE, '2024-01-15 10:00:00'),
+('BIO315 Research Squad', 'Study group for molecular biology research projects', 7, 'BIO315', 6, 5, FALSE, '2024-01-16 14:30:00'),
+('Business Analytics Group', 'Data-driven business decision making study sessions', 8, 'BUS250', 6, 8, FALSE, '2024-01-17 16:45:00'),
 
--- Insert User_StudyGroup relationships (group memberships)
+-- Northeastern University study groups (university_id 7)
+('Circuit Breakers', 'Group for mastering electrical circuit analysis', 10, 'EECE2150', 7, 6, FALSE, '2024-01-18 11:00:00'),
+('Database Design Crew', 'Collaborative group for database implementation projects', 11, 'CS3200', 7, 4, TRUE, '2024-01-19 15:30:00'),
+('Data Science Explorers', 'Hands-on data science practice and projects', 12, 'DS3000', 7, 6, FALSE, '2024-01-20 13:15:00'),
+
+-- Boston College study groups (university_id 8)
+('Econ Theory Team', 'Group for economic theory problem solving', 14, 'ECON2201', 8, 6, FALSE, '2024-01-21 10:30:00'),
+('Modern History Discussion', 'Discussion-based study group for modern American history', 15, 'HIST2180', 8, 8, FALSE, '2024-01-22 14:00:00'),
+('BC Biology Lab Partners', 'Study group for biology lab preparation and review', 17, 'BIOL2000', 8, 4, TRUE, '2024-01-23 16:15:00'),
+
+-- Harvard study groups (university_id 4)
+('Harvard Algorithm Squad', 'Advanced algorithm design and analysis practice', 1, 'CS124', 4, 6, FALSE, '2024-01-24 09:30:00'),
+('Quantum Physics Group', 'Theoretical and applied physics study sessions', 3, 'PHYS16', 4, 5, TRUE, '2024-01-25 11:45:00'),
+('Harvard Economics Forum', 'Discussion-based economics study group', 2, 'ECON1010', 4, 8, FALSE, '2024-01-26 13:00:00'),
+
+-- MIT study groups (university_id 3)
+('MIT Algorithm Masters', 'Deep dive into advanced algorithm design', 5, '6.046', 3, 6, FALSE, '2024-01-27 10:15:00'),
+('Computation Theory Group', 'Theoretical computer science study and problem solving', 18, '18.404', 3, 5, TRUE, '2024-01-28 14:45:00'),
+('Biology Research Collective', 'Collaborative biology research and study sessions', 20, '7.012', 3, 6, FALSE, '2024-01-29 16:30:00');
+
+-- Add members to Study Groups
 INSERT INTO User_StudyGroup (user_id, study_group_id) VALUES
-(1, 1),  -- Alice in CS61A Study Buddies
-(2, 2),  -- Bob in MATH51 Warriors
-(3, 3),  -- Charlie in Algorithms Club
-(4, 4),  -- Diana in CS50 Harvard
-(5, 5),  -- Evan in Web Dev Masters
-(1, 2),  -- Alice also in MATH51 Warriors
-(2, 1);  -- Bob also in CS61A Study Buddies
+-- Boston University study groups (university_id 6)
+-- StudyGroup 1 (CS330 Algorithm Masters) - Add the owner and other BU students
+(6, 1), -- Owner is already added by trigger, but adding for clarity
+(7, 1), 
+(8, 1),
+(9, 1),
 
--- Insert one-time Meetings
+-- StudyGroup 2 (BIO315 Research Squad) - Add BU students
+(7, 2), -- Owner
+(6, 2),
+(9, 2),
+
+-- StudyGroup 3 (Business Analytics Group) - Add BU students
+(8, 3), -- Owner
+(6, 3),
+(9, 3),
+
+-- Northeastern University study groups (university_id 7)
+-- StudyGroup 4 (Circuit Breakers) - Add Northeastern students
+(10, 4), -- Owner
+(11, 4),
+(12, 4),
+
+-- StudyGroup 5 (Database Design Crew) - Add Northeastern students
+(11, 5), -- Owner
+(10, 5),
+(13, 5),
+
+-- StudyGroup 6 (Data Science Explorers) - Add Northeastern students
+(12, 6), -- Owner
+(10, 6),
+(13, 6),
+
+-- Boston College study groups (university_id 8)
+-- StudyGroup 7 (Econ Theory Team) - Add BC students
+(14, 7), -- Owner
+(15, 7),
+(16, 7),
+
+-- StudyGroup 8 (Modern History Discussion) - Add BC students
+(15, 8), -- Owner
+(14, 8),
+(16, 8),
+(17, 8),
+
+-- StudyGroup 9 (BC Biology Lab Partners) - Add BC students
+(17, 9), -- Owner
+(16, 9),
+
+-- Harvard study groups (university_id 4)
+-- StudyGroup 10 (Harvard Algorithm Squad) - Add Harvard students
+(1, 10), -- Owner
+(2, 10),
+(3, 10),
+(4, 10),
+
+-- StudyGroup 11 (Quantum Physics Group) - Add Harvard students
+(3, 11), -- Owner
+(1, 11),
+(4, 11),
+
+-- StudyGroup 12 (Harvard Economics Forum) - Add Harvard students
+(2, 12), -- Owner
+(1, 12),
+(4, 12),
+
+-- MIT study groups (university_id 3)
+-- StudyGroup 13 (MIT Algorithm Masters) - Add MIT students
+(5, 13), -- Owner
+(18, 13),
+(19, 13),
+
+-- StudyGroup 14 (Computation Theory Group) - Add MIT students
+(18, 14), -- Owner
+(5, 14),
+(19, 14),
+(20, 14),
+
+-- StudyGroup 15 (Biology Research Collective) - Add MIT students
+(20, 15), -- Owner
+(5, 15),
+(19, 15);
+
+-- Add more Meetings for the new study groups
+-- Add one-time meetings (without explicit meeting_id to allow auto-increment)
 INSERT INTO Meeting (study_group_id, name, start_time, end_time, location, description, created_by, meeting_date, is_recurring) VALUES
-(1, 'CS61A Midterm Review', '18:00:00', '20:00:00', 'Moffitt Library 4th Floor', 'Review for upcoming midterm exam', 1, '2023-10-15', FALSE),
-(2, 'MATH51 Problem Session', '16:30:00', '18:30:00', 'Green Library Study Room 202', 'Work through practice problems together', 2, '2023-10-16', FALSE),
-(3, 'Algorithms Study Session', '19:00:00', '21:00:00', 'Building 32 Room 144', 'Dynamic programming concepts', 3, '2023-10-17', FALSE),
-(4, 'CS50 Office Hours', '14:00:00', '16:00:00', 'Science Center 101', 'TA-led help session', 4, '2023-10-18', FALSE),
-(5, 'INFO340 Project Planning', '17:00:00', '19:00:00', 'Odegaard Library 3rd Floor', 'Plan group project deliverables', 5, '2023-10-19', FALSE);
+-- Boston University meetings (study groups 1-3)
+(1, 'Algorithm Final Review', '18:00:00', '20:00:00', 'Warren Towers Study Lounge', 'Comprehensive review for CS330 final exam', 6, '2024-05-01', FALSE),
+(2, 'Molecular Biology Lab Prep', '16:00:00', '18:00:00', 'Life Sciences Building Room 202', 'Preparation for upcoming molecular biology lab experiment', 7, '2024-04-15', FALSE),
+(3, 'Business Case Study Workshop', '17:00:00', '19:00:00', 'Questrom School of Business Room 302', 'Workshop to analyze recent business cases', 8, '2024-04-20', FALSE),
 
--- Insert recurring meetings
+-- Northeastern University meetings (study groups 4-6)
+(4, 'Circuit Design Workshop', '15:00:00', '17:00:00', 'Dana Research Center Room 125', 'Hands-on workshop for circuit design and analysis', 10, '2024-04-22', FALSE),
+(5, 'Database Project Planning', '14:00:00', '16:00:00', 'Snell Library Study Room 4', 'Planning session for final database project', 11, '2024-04-25', FALSE),
+(6, 'Data Visualization Session', '16:30:00', '18:30:00', 'West Village H Room 210', 'Workshop focusing on effective data visualization techniques', 12, '2024-04-28', FALSE),
+
+-- Boston College meetings (study groups 7-9)
+(7, 'Economics Problem Set Marathon', '13:00:00', '16:00:00', 'ONeill Library Room 303', 'Group session to work through difficult problem sets', 14, '2024-05-02', FALSE),
+(8, 'History Essay Workshop', '14:30:00', '16:30:00', 'Stokes Hall Room S201', 'Peer review workshop for upcoming history essays', 15, '2024-05-05', FALSE),
+(9, 'Biology Exam Prep', '17:00:00', '19:00:00', 'Higgins Hall Room 310', 'Comprehensive review for biology midterm', 17, '2024-04-18', FALSE);
+
+-- Add recurring meetings (without explicit meeting_id to allow auto-increment)
 INSERT INTO Meeting (study_group_id, name, start_time, end_time, location, description, created_by, is_recurring, start_date, end_date, recurrence_days) VALUES
-(1, 'Weekly CS61A Study', '17:00:00', '19:00:00', 'Soda Hall 306', 'Weekly problem set collaboration', 1, TRUE, '2023-09-05', '2023-12-05', '2,4'), -- Tue, Thu
-(2, 'MATH51 Discussion', '15:00:00', '17:00:00', 'Math Building 101', 'Weekly discussion section', 2, TRUE, '2023-09-06', '2023-12-06', '3'), -- Wed
-(3, 'Algorithms Practice', '18:00:00', '20:00:00', 'Stata Center 32-144', 'Weekly algorithm practice', 3, TRUE, '2023-09-07', '2023-12-07', '5'), -- Fri
-(4, 'CS50 Weekly Review', '13:00:00', '15:00:00', 'Sever Hall 113', 'Weekly lecture review', 4, TRUE, '2023-09-08', '2023-12-08', '1'), -- Mon
-(5, 'Web Dev Lab Hours', '16:00:00', '18:00:00', 'CSE Building 403', 'Weekly project work time', 5, TRUE, '2023-09-09', '2023-12-09', '2,5'); -- Tue, Fri
+-- Harvard recurring meetings (study groups 10-12)
+(10, 'Weekly Algorithm Practice', '16:00:00', '18:00:00', 'Maxwell Dworkin Room 119', 'Weekly algorithm problem solving session', 1, TRUE, '2024-02-01', '2024-05-30', '2,4'), -- Tue, Thu
+(11, 'Physics Problem Solving', '17:30:00', '19:30:00', 'Jefferson Lab Room 256', 'Weekly session to work through physics problem sets', 3, TRUE, '2024-02-02', '2024-05-31', '3'), -- Wed
+(12, 'Economics Discussion Group', '15:00:00', '17:00:00', 'Littauer Center Room 301', 'Weekly economics topic discussion and problem solving', 2, TRUE, '2024-02-03', '2024-05-29', '1,3'), -- Mon, Wed
 
--- TODO NAVANEETH: add insert statements to the tables you created (for initial data)
+-- MIT recurring meetings (study groups 13-15)
+(13, 'Algorithm Design Workshop', '16:30:00', '18:30:00', 'Stata Center 32-123', 'Weekly algorithm design and analysis session', 5, TRUE, '2024-02-05', '2024-05-28', '2,5'), -- Tue, Fri
+(14, 'Theory of Computation Study', '15:00:00', '17:00:00', 'Building 2 Room 105', 'Weekly computational theory problem solving', 18, TRUE, '2024-02-06', '2024-05-29', '3'), -- Wed
+(15, 'Biology Research Discussion', '17:00:00', '19:00:00', 'Building 68 Room 181', 'Weekly biology research and lab discussion', 20, TRUE, '2024-02-07', '2024-05-30', '4'); -- Thu
 
--- Insert Tags
-INSERT INTO Tags (tag_id,name, description) VALUES
-(1,'Quiet Study', 'A tag for meetings that are focused on quiet study or concentration'),
-(2,'Exam Prep', 'A tag for meetings that are focused on preparing for exams'),
-(3,'Social', 'A tag for meetings that involve socializing or networking'),
-(4,'Homework', 'A tag for meetings dedicated to working on homework or assignments'),
-(5,'Project Work', 'A tag for meetings focused on collaborative project work');
+-- Add more Tags
+-- Starting after the 5 existing tags in the original script
+INSERT INTO Tags (tag_id, name, description) VALUES
+(6, 'Beginner Friendly', 'Suitable for students new to the subject'),
+(7, 'Advanced Topics', 'Explores complex and advanced subject matter'),
+(8, 'Exam Preparation', 'Focused on preparing for upcoming exams'),
+(9, 'Research Focused', 'Emphasis on research methodologies and findings'),
+(10, 'Discussion Based', 'Primarily discussion-oriented rather than lecture format'),
+(11, 'Problem Solving', 'Dedicated to solving practice problems and exercises'),
+(12, 'Lab Preparation', 'Preparation for laboratory components of courses');
 
--- Insert StudyGroup_Tags (many-to-many relationship between StudyGroup and Tags)
+-- Tag the study groups
 INSERT INTO StudyGroup_Tags (study_group_id, tag_id) VALUES
-(1, 1),  -- CS61A Midterm Review tagged as Quiet Study
-(1, 2),  -- CS61A Midterm Review tagged as Exam Prep
-(2, 4),  -- MATH51 Problem Session tagged as Homework
-(3, 1),  -- Algorithms Study Session tagged as Quiet Study
-(3, 5),  -- Algorithms Study Session tagged as Project Work
-(4, 3),  -- CS50 Office Hours tagged as Social
-(5, 4),  -- INFO340 Project Planning tagged as Homework
-(5, 5),  -- Weekly CS61A Study tagged as Project Work
-(4, 1);  -- MATH51 Discussion tagged as Quiet Study
+-- Boston University study groups tags (study groups 1-3)
+(1, 7), (1, 6), -- CS330 Algorithm Masters: Advanced Topics, Problem Solving
+(2, 8), (2, 9), -- BIO315 Research Squad: Research Focused, Lab Preparation
+(3, 8), (3, 10), -- Business Analytics Group: Project Collaboration, Discussion Based
 
--- Insert GroupJoinRequests
-INSERT INTO GroupJoinRequests (user_id, study_group_id, request_date, status, response_date, response_message) VALUES
-(5, 3, '2023-09-15 10:30:00', 'pending', NULL, NULL),  -- Evan requests to join Algorithms Club
-(1, 3, '2023-09-15 11:00:00', 'approved', '2023-09-16 12:00:00', 'Welcome to the club, Alice!'),  -- Alice approved for Algorithms Club
-(2, 4, '2023-09-16 14:15:00', 'rejected', '2023-09-17 13:30:00', 'Sorry, the group is full at the moment.'),  -- Bob rejected for CS50 Harvard
-(4, 2, '2023-09-17 09:00:00', 'pending', NULL, NULL);  -- Diana requests to join MATH51 Warriors
+-- Northeastern University study groups tags (study groups 4-6)
+(4, 8), (4, 12), -- Circuit Breakers: Problem Solving, Lab Preparation
+(5, 8), (5, 7), -- Database Design Crew: Project Collaboration, Advanced Topics
+(6, 6), (6, 8), -- Data Science Explorers: Beginner Friendly, Project Collaboration
 
--- Insert Achievements
-INSERT INTO Achievements (name, description, is_platform_default) VALUES
-('Social Butterfly', 'Awarded for completing all assignments in CS61A', TRUE),
-('Most Consistent', 'Awarded for solving 100+ MATH51 problems', TRUE),
-('Algorithm Master', 'Awarded for exceptional performance in algorithm implementations', TRUE);
+-- Boston College study groups tags (study groups 7-9)
+(7, 6), (7, 8), -- Econ Theory Team: Problem Solving, Exam Preparation
+(8, 10), (8, 6), -- Modern History Discussion: Discussion Based, Beginner Friendly
+(9, 8), (9, 12), -- BC Biology Lab Partners: Exam Preparation, Lab Preparation
 
--- Insert UserAchievements (many-to-many relationship between Users and Achievements)
+-- Harvard study groups tags (study groups 10-12)
+(10, 7), (10, 6), -- Harvard Algorithm Squad: Advanced Topics, Problem Solving
+(11, 7), (11, 8), -- Quantum Physics Group: Advanced Topics, Exam Preparation
+(12, 10), (12, 6), -- Harvard Economics Forum: Discussion Based, Beginner Friendly
+
+-- MIT study groups tags (study groups 13-15)
+(13, 7), (13, 6), -- MIT Algorithm Masters: Advanced Topics, Problem Solving
+(14, 7), (14, 6), -- Computation Theory Group: Advanced Topics, Problem Solving
+(15, 9), (15, 12); -- Biology Research Collective: Research Focused, Lab Preparation
+
+-- Add more Achievements
+-- Starting after the 3 existing achievements in the original script
+INSERT INTO Achievements (achievement_id, name, description, is_platform_default) VALUES
+(4, 'Group Leader', 'Created and managed a successful study group with high member engagement', TRUE),
+(5, 'Networking Pro', 'Joined and actively participated in 5+ different study groups', TRUE),
+(6, 'Digital Collaborator', 'Effectively utilized digital tools for remote collaboration', TRUE),
+(7, 'Perfect Attendance', 'Attended all scheduled meetings for a full semester', TRUE),
+(8, 'Helpful Peer', 'Received recognition from group members for exceptional contributions', TRUE),
+(9, 'Cross-Disciplinary Scholar', 'Successfully participated in study groups across multiple disciplines', TRUE),
+(10, 'Community Builder', 'Helped integrate new members into study groups', TRUE);
+
+-- Award Achievements to Users
 INSERT INTO UserAchievements (user_id, achievement_id) VALUES
-(1, 1), 
-(2, 2), 
-(3, 3);
+-- Boston University student achievements (users 6-9)
+(6, 4), (6, 6),  -- Jordan: Group Leader, Digital Collaborator
+(7, 4), (7, 8),  -- Taylor: Group Leader, Helpful Peer
+(8, 4), (8, 9),  -- Alex: Group Leader, Cross-Disciplinary Scholar
+(9, 4), (9, 7),  -- Morgan: Group Leader, Perfect Attendance
 
-INSERT INTO Notifications (user_id, message) 
-VALUES 
-    (1, 'Your account has been successfully created.'),
-    (2, 'Your profile was updated successfully.'),
-    (3, 'You have a new message from the admin.'),
-    (4, 'Your subscription is about to expire. Please renew soon.'),
-    (5, 'You have a new friend request.');
-        INSERT INTO Notifications (user_id, message) 
-VALUES 
-    (6, 'Your account has been successfully created.'),
-    (7, 'Your profile was updated successfully.'),
-    (8, 'You have a new friend request.');
+-- Northeastern University student achievements (users 10-13)
+(10, 4), (10, 6),  -- Casey: Group Leader, Digital Collaborator
+(11, 4), (11, 8),  -- Jamie: Group Leader, Helpful Peer
+(12, 4), (12, 10), -- Riley: Group Leader, Community Builder
+(13, 4), (13, 5),  -- Avery: Group Leader, Networking Pro
 
+-- Boston College student achievements (users 14-17)
+(14, 4), (14, 9),  -- Quinn: Group Leader, Cross-Disciplinary Scholar
+(15, 4), (15, 6),  -- Sasha: Group Leader, Digital Collaborator
+(16, 4), (16, 7),  -- Devon: Group Leader, Perfect Attendance
+(17, 4), (17, 8),  -- Jordan: Group Leader, Helpful Peer
+
+-- Harvard student achievements (users 1-4)
+(1, 4), (1, 6),  -- Mike: Group Leader, Digital Collaborator
+(2, 4), (2, 10), -- Sarah: Group Leader, Community Builder
+(3, 4), (3, 7),  -- James: Group Leader, Perfect Attendance
+(4, 4), (4, 5),  -- Emma: Group Leader, Networking Pro
+
+-- MIT student achievements (users 5, 18-20)
+(5, 4), (5, 9),   -- David: Group Leader, Cross-Disciplinary Scholar
+(18, 4), (18, 8), -- Ethan: Group Leader, Helpful Peer
+(19, 4), (19, 6), -- Olivia: Group Leader, Digital Collaborator
+(20, 4), (20, 7); -- Zoe: Group Leader, Perfect Attendance
 
 -- ====================================================================
 -- DATABASE PROGRAMMING OBJECTS
@@ -890,3 +1101,4 @@ BEGIN
 END//
 
 DELIMITER ;
+
