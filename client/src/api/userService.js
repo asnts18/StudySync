@@ -11,9 +11,17 @@ const userService = {
   updateProfile: async (userData) => {
     const response = await api.put('/users/profile', userData);
     return response.data;
+  },
+
+  getUserMetrics: async () => {
+    try {
+      const response = await api.get('/users/metrics');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user metrics:', error);
+      throw error;
+    }
   }
-
-
 };
 
 export default userService;

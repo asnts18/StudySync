@@ -1,20 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import userService from '../api/userService'; // Import existing user service
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const [userMetrics, setUserMetrics] = useState({
+    courses: 0,
+    created_groups: 0,
+    joined_groups: 0,
+    achievements: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p>Loading profile...</p>
-      </div>
-    );
-  }
-
+  useEffect(() => {
+    // Fetch user metrics when component mounts
+    const fetchUserMetrics = async () => {
+      try {
+        console.log('Fetching user metrics...');
+        const metrics = await userService.getUserMetrics();
+        console.log('Received metrics:', metrics);
+        setUserMetrics(metrics);
+      } catch (err) {
+        console.error('Error fetching user metrics:', err);
+        setError('Failed to load user statistics');
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    if (currentUser) {
+      fetchUserMetrics();
+    } else {
+      setLoading(false);
+    }
+  }, [currentUser]);
+  
   return (
     <div className="min-h-screen bg-white">
       <main className="max-w-2xl mx-auto px-8 py-12">
@@ -69,27 +93,33 @@ const ProfilePage = () => {
             </p>
           </div>
 
-          {/* Study Stats (placeholder for future expansion) */}
+          {/* Study Stats */}
           <div className="border-2 border-black p-6">
             <h2 className="text-2xl font-semibold mb-4">Study Stats</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-3xl font-bold">0</p>
-                <p className="text-sm text-gray-500">Courses</p>
+            {error ? (
+              <p className="text-red-500">{error}</p>
+            ) : loading ? (
+              <p className="text-gray-500">Loading statistics...</p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <p className="text-3xl font-bold">{userMetrics.courses || 0}</p>
+                  <p className="text-sm text-gray-500">Courses</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold">{userMetrics.created_groups || 0}</p>
+                  <p className="text-sm text-gray-500">Groups Created</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold">{userMetrics.joined_groups || 0}</p>
+                  <p className="text-sm text-gray-500">Groups Joined</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold">{userMetrics.achievements || 0}</p>
+                  <p className="text-sm text-gray-500">Achievements</p>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">0</p>
-                <p className="text-sm text-gray-500">Study Groups</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">0</p>
-                <p className="text-sm text-gray-500">Sessions</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">0</p>
-                <p className="text-sm text-gray-500">Hours</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </main>

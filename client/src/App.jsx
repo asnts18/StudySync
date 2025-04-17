@@ -13,6 +13,7 @@ import ProfileEditPage from './pages/ProfileEditPage';
 import Header from './components/Header';  
 import Footer from './components/Footer'; 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Create a new component to handle the root route redirection
