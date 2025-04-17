@@ -1,6 +1,6 @@
 // components/GroupDetailModal.jsx
 import React from 'react';
-import { X, Users, BookOpen, Calendar } from 'lucide-react';
+import { X, Users, BookOpen, Calendar, Tag } from 'lucide-react';
 import { formatDateString } from '../utils/groupUtils';
 
 const GroupDetailModal = ({ group, onClose }) => {
@@ -66,11 +66,11 @@ const GroupDetailModal = ({ group, onClose }) => {
             <p className="mt-1 text-left">{formattedCreatedDate}</p>
           </div>
 
-          {/* Study Style */}
+          {/* Study Style Tags */}
           {group.tags && group.tags.length > 0 && (
             <div className="border-2 border-black p-4">
               <h3 className="font-semibold mb-2 flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
+                <Tag className="w-4 h-4" />
                 Study Style
               </h3>
               <div className="flex flex-wrap gap-2">

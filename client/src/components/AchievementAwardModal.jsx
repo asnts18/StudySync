@@ -67,9 +67,12 @@ const AchievementAwardModal = ({
           console.log(`Fetching group achievements for group ${groupId}`);
           const groupAchievements = await achievementService.getGroupAchievements(groupId);
           if (groupAchievements && Array.isArray(groupAchievements)) {
-            // Add group achievements if available
-            allAchievements = [...allAchievements, ...groupAchievements];
-            console.log(`Found ${groupAchievements.length} group achievements`);
+            // Only add unique achievements by ID
+            const existingIds = new Set(allAchievements.map(a => a.achievement_id));
+            const uniqueGroupAchievements = groupAchievements.filter(a => !existingIds.has(a.achievement_id));
+            
+            allAchievements = [...allAchievements, ...uniqueGroupAchievements];
+            console.log(`Found ${uniqueGroupAchievements.length} unique group achievements`);
           }
         } catch (groupErr) {
           console.log('Error fetching group achievements:', groupErr);
@@ -96,8 +99,9 @@ const AchievementAwardModal = ({
     (achievement.description && achievement.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Handle creating a new achievement
-  const handleCreateAchievement = async () => {
+
+// Handle create achievement
+const handleCreateAchievement = async () => {
     if (!newAchievement.name) {
       setError('Achievement name is required');
       return;
@@ -109,19 +113,46 @@ const AchievementAwardModal = ({
     try {
       console.log(`Creating achievement for group ${groupId}:`, newAchievement);
       
+      // Create achievement data with the minimum required fields
+      const achievementData = {
+        name: newAchievement.name,
+        description: newAchievement.description || '' // Ensure description is not null
+      };
+      
+      // Call the service
       const createdAchievement = await achievementService.createGroupAchievement(
         groupId, 
-        {
-          name: newAchievement.name,
-          description: newAchievement.description || '' // Ensure description is not null
-        }
+        achievementData
       );
       
-      console.log('Created achievement:', createdAchievement);
+      console.log('Created achievement result:', createdAchievement);
       
-      // Add the new achievement to the list
+      // Safely add the new achievement to the list
       if (createdAchievement) {
-        setAchievements(prev => [...prev, createdAchievement]);
+        // Create a safe copy with all required fields
+        const safeAchievement = {
+          achievement_id: createdAchievement.achievement_id || Date.now(),
+          name: createdAchievement.name || newAchievement.name,
+          description: createdAchievement.description || newAchievement.description || '',
+          group_id: parseInt(groupId),
+          is_platform_default: false
+        };
+        
+        // Check if achievement is already in the list to avoid duplicates
+        const existingIndex = achievements.findIndex(a => 
+          a.achievement_id === safeAchievement.achievement_id ||
+          (a.name === safeAchievement.name && a.group_id === safeAchievement.group_id)
+        );
+        
+        if (existingIndex >= 0) {
+          // Replace the existing achievement
+          const updatedAchievements = [...achievements];
+          updatedAchievements[existingIndex] = safeAchievement;
+          setAchievements(updatedAchievements);
+        } else {
+          // Add as a new achievement
+          setAchievements(prev => [...prev, safeAchievement]);
+        }
       }
       
       // Reset form and show success message

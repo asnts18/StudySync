@@ -5,6 +5,7 @@ import { ArrowLeft, Search, Plus, X } from "lucide-react";
 import { Textarea } from "../components/ui/textarea";
 import courseService from "../api/courseService";
 import studyGroupService from "../api/studyGroupService";
+import tagService from "../api/tagService";
 import { useAuth } from "../contexts/AuthContext";
 
 const CreateGroupPage = () => {
@@ -14,6 +15,8 @@ const CreateGroupPage = () => {
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [groupName, setGroupName] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
   
   // Course-related state
   const [courses, setCourses] = useState([]);
@@ -26,7 +29,7 @@ const CreateGroupPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch courses when component mounts
+  // Fetch courses and tags when component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -38,9 +41,13 @@ const CreateGroupPage = () => {
           const universityCourses = await courseService.getCoursesByUniversity(currentUser.university_id);
           setCourses(universityCourses);
         }
+        
+        // Fetch available tags
+        const tags = await tagService.getAllTags();
+        setAvailableTags(tags);
       } catch (error) {
-        console.error("Error fetching courses:", error);
-        setError("Failed to load courses. Please try again.");
+        console.error("Error fetching data:", error);
+        setError("Failed to load necessary data. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -64,6 +71,17 @@ const CreateGroupPage = () => {
   const handleClearSelectedCourse = () => {
     setSelectedCourse("");
     setSelectedCourseObj(null);
+  };
+
+  // Toggle tag selection
+  const handleTagToggle = (tagId) => {
+    setSelectedTags(prev => {
+      if (prev.includes(tagId)) {
+        return prev.filter(id => id !== tagId);
+      } else {
+        return [...prev, tagId];
+      }
+    });
   };
 
   // Create a new course and enroll the user in it
@@ -148,6 +166,7 @@ const CreateGroupPage = () => {
       university_id: currentUser.university_id,
       max_capacity: parseInt(groupSize),
       is_private: isPrivate,
+      tags: selectedTags // Include the selected tags
     };
     
     console.log("Creating study group:", studyGroupData);
@@ -313,6 +332,33 @@ const CreateGroupPage = () => {
                   </>
                 )}
               </div>
+            )}
+          </div>
+
+          {/* Tag Selection Section */}
+          <div className="space-y-4 w-full">
+            <label className="block text-lg text-left">Study Style Tags</label>
+            <p className="text-sm text-gray-500 mb-2">
+              Select tags that describe your study group style to help others find your group
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {availableTags.map((tag) => (
+                <button
+                  key={tag.tag_id}
+                  type="button"
+                  onClick={() => handleTagToggle(tag.tag_id)}
+                  className={`px-6 py-2 border-2  rounded-full  transition-colors ${
+                    selectedTags.includes(tag.tag_id)
+                      ? "border-black bg-primary-yellow"
+                      : "border-gray-300 hover:border-gray-400"
+                  }`}
+                >
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+            {availableTags.length === 0 && !isLoading && (
+              <p className="text-gray-500">No tags available</p>
             )}
           </div>
 
