@@ -1,6 +1,6 @@
 // components/PendingRequestsNotification.jsx
 import React, { useState, useEffect } from 'react';
-import { BellRing, Clock, X, User } from 'lucide-react';
+import { BellRing, Clock, X, User, Check } from 'lucide-react';
 import studyGroupService from '../api/studyGroupService';
 
 const PendingRequestsNotification = () => {
@@ -29,13 +29,14 @@ const PendingRequestsNotification = () => {
     }
   };
   
-  // Fetch pending requests
+  // Fetch pending requests for groups owned by the current user
   useEffect(() => {
     const fetchPendingRequests = async () => {
       try {
         setLoading(true);
+        // This endpoint returns all pending join requests across all groups owned by the user
         const data = await studyGroupService.getPendingJoinRequests();
-        console.log('Fetched pending requests:', data); // Debug log
+        console.log('Fetched pending requests:', data);
         setPendingRequests(data);
         setError('');
       } catch (error) {
@@ -56,6 +57,19 @@ const PendingRequestsNotification = () => {
     
     return () => clearInterval(intervalId);
   }, []);
+
+  // Handle request response (approve or reject)
+  const handleRequestResponse = async (requestId, groupId, action) => {
+    try {
+      await studyGroupService.respondToJoinRequest(groupId, requestId, action);
+      
+      // Update the local state to remove the processed request
+      setPendingRequests(pendingRequests.filter(req => req.request_id !== requestId));
+    } catch (error) {
+      console.error(`Error ${action}ing request:`, error);
+      setError(`Failed to ${action} request. Please try again.`);
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -124,17 +138,35 @@ const PendingRequestsNotification = () => {
                     </div>
                     <div className="ml-2 flex-1">
                       <p className="text-sm font-medium">
-                        Request to join <span className="font-semibold">{request.group_name}</span>
+                        <span className="font-semibold">{request.first_name} {request.last_name}</span> requests to join <span className="font-semibold">{request.group_name}</span>
                       </p>
                       {request.course_code && (
                         <p className="text-xs text-gray-500">
-                          {request.course_code}: {request.course_name}
+                          {request.course_code}{request.course_name ? `: ${request.course_name}` : ''}
                         </p>
                       )}
                       <p className="text-xs text-gray-500 mt-1 flex items-center">
                         <Clock className="w-3 h-3 mr-1" />
                         Requested {formatRelativeTime(request.request_date)}
                       </p>
+                      
+                      {/* Action buttons */}
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          onClick={() => handleRequestResponse(request.request_id, request.study_group_id, 'approve')}
+                          className="px-2 py-1 bg-primary-yellow border border-black text-xs hover:bg-dark-yellow transition-colors rounded flex items-center"
+                        >
+                          <Check className="w-3 h-3 mr-1" />
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleRequestResponse(request.request_id, request.study_group_id, 'reject')}
+                          className="px-2 py-1 bg-gray-100 border border-gray-300 text-xs hover:bg-gray-200 transition-colors rounded flex items-center"
+                        >
+                          <X className="w-3 h-3 mr-1" />
+                          Reject
+                        </button>
+                      </div>
                     </div>
                     <div className="flex-shrink-0">
                       <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
