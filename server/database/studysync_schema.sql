@@ -110,12 +110,12 @@ CREATE TABLE Tags (
     description TEXT
 );
 
--- Create many-to-many relationship table for Meeting and Tags
-CREATE TABLE Meeting_Tags (
-    meeting_id INT,
+-- Create many-to-many relationship table for StudyGroup and Tags
+CREATE TABLE StudyGroup_Tags (
+    study_group_id INT,
     tag_id INT,
-    PRIMARY KEY (meeting_id, tag_id),
-    FOREIGN KEY (meeting_id) REFERENCES Meeting(meeting_id) ON DELETE CASCADE,
+    PRIMARY KEY (study_group_id, tag_id),
+    FOREIGN KEY (study_group_id) REFERENCES StudyGroup(study_group_id) ON DELETE CASCADE,
     FOREIGN KEY (tag_id) REFERENCES Tags(tag_id) ON DELETE CASCADE
 );
 
