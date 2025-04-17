@@ -63,7 +63,141 @@ const getGroupMeetings = async (groupId) => {
   }
 };
 
-// todo: update meeting
-// todo: delete meeting
+const getMeetingById = async (meetingId) => {
+  try {
+    const sql = 'SELECT * FROM Meeting WHERE meeting_id = ?';
+    const meetings = await db.query(sql, [meetingId]);
+    
+    if (meetings.length === 0) {
+      throw new Error('Meeting not found');
+    }
+    
+    return meetings[0];
+  } catch (error) {
+    console.error("DB error fetching meeting:", error);
+    throw error;
+  }
+};
 
-module.exports = { createMeeting, getGroupMeetings };
+const updateMeeting = async (meetingId, meetingData, userId) => {
+  try {
+    // First check if the meeting exists and if the user is authorized to update it
+    const meeting = await getMeetingById(meetingId);
+    
+    // Check if the user is the creator or group owner (this would require a lookup to the group)
+    const studyGroup = await db.query(
+      'SELECT owner_id FROM StudyGroup WHERE study_group_id = ?', 
+      [meeting.study_group_id]
+    );
+    
+    const isCreator = meeting.created_by === userId;
+    const isGroupOwner = studyGroup[0]?.owner_id === userId;
+    
+    if (!isCreator && !isGroupOwner) {
+      throw new Error('Not authorized to update this meeting');
+    }
+    
+    // Proceed with the update
+    let sql;
+    let params;
+    
+    if (meetingData.is_recurring) {
+      sql = `
+        UPDATE Meeting SET 
+          name = ?, 
+          start_time = ?, 
+          end_time = ?, 
+          location = ?, 
+          description = ?, 
+          is_recurring = ?, 
+          meeting_date = NULL, 
+          start_date = ?, 
+          end_date = ?, 
+          recurrence_days = ?
+        WHERE meeting_id = ?
+      `;
+      
+      params = [
+        meetingData.name,
+        meetingData.start_time,
+        meetingData.end_time,
+        meetingData.location,
+        meetingData.description,
+        1, // is_recurring = true
+        meetingData.start_date,
+        meetingData.end_date,
+        meetingData.recurrence_days,
+        meetingId
+      ];
+    } else {
+      sql = `
+        UPDATE Meeting SET 
+          name = ?, 
+          start_time = ?, 
+          end_time = ?, 
+          location = ?, 
+          description = ?, 
+          is_recurring = ?, 
+          meeting_date = ?, 
+          start_date = NULL, 
+          end_date = NULL, 
+          recurrence_days = NULL
+        WHERE meeting_id = ?
+      `;
+      
+      params = [
+        meetingData.name,
+        meetingData.start_time,
+        meetingData.end_time,
+        meetingData.location,
+        meetingData.description,
+        0, // is_recurring = false
+        meetingData.meeting_date,
+        meetingId
+      ];
+    }
+    
+    await db.query(sql, params);
+    return getMeetingById(meetingId);
+  } catch (error) {
+    console.error("DB error updating meeting:", error);
+    throw error;
+  }
+};
+
+const deleteMeeting = async (meetingId, userId) => {
+  try {
+    // First check if the meeting exists and if the user is authorized to delete it
+    const meeting = await getMeetingById(meetingId);
+    
+    // Check if the user is the creator or group owner
+    const studyGroup = await db.query(
+      'SELECT owner_id FROM StudyGroup WHERE study_group_id = ?', 
+      [meeting.study_group_id]
+    );
+    
+    const isCreator = meeting.created_by === userId;
+    const isGroupOwner = studyGroup[0]?.owner_id === userId;
+    
+    if (!isCreator && !isGroupOwner) {
+      throw new Error('Not authorized to delete this meeting');
+    }
+    
+    // Proceed with the deletion
+    const sql = 'DELETE FROM Meeting WHERE meeting_id = ?';
+    await db.query(sql, [meetingId]);
+    
+    return { success: true, message: 'Meeting deleted successfully' };
+  } catch (error) {
+    console.error("DB error deleting meeting:", error);
+    throw error;
+  }
+};
+
+module.exports = { 
+  createMeeting, 
+  getGroupMeetings, 
+  getMeetingById, 
+  updateMeeting, 
+  deleteMeeting 
+};

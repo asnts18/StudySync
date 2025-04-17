@@ -1,8 +1,8 @@
 // components/GroupEditModal.jsx
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { Textarea } from './ui/textarea';
-import studyGroupService from '../api/studyGroupService';
+import { Textarea } from '../../components/ui/textarea';
+import studyGroupService from '../../api/studyGroupService';
 
 const GroupEditModal = ({ group, onClose, onUpdateSuccess }) => {
   const [formData, setFormData] = useState({

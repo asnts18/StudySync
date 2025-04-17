@@ -5,7 +5,11 @@ const notificationService = require('../services/notificationService');
 const getNotifications = async (req, res) => {
   try {
     const userId = req.userId; // Auth middleware should attach userId
+    console.log('Fetching notifications for user:', userId);
+    
     const notifications = await notificationService.getNotificationsForUser(userId);
+    console.log('Retrieved notifications:', notifications);
+    
     res.status(200).json(notifications);
   } catch (error) {
     console.error("Error getting notifications:", error);

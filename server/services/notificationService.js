@@ -4,14 +4,22 @@ const db = require('../config/db.config');
 // Fetch notifications for a specific user, ordered by created_at descending
 const getNotificationsForUser = async (userId) => {
   try {
+    console.log('NotificationService: Fetching notifications for user:', userId);
     const sql = `SELECT * FROM Notifications WHERE user_id = ? ORDER BY created_at DESC`;
-    const notifications = await db.query(sql, [userId]);
+    const params = [userId];
+    console.log('SQL query:', sql);
+    console.log('Parameters:', params);
+    
+    const notifications = await db.query(sql, params);
+    console.log('Raw notification results:', notifications);
+    
     return notifications;
   } catch (error) {
     console.error("DB error fetching notifications:", error);
     throw error;
   }
 };
+
 
 // Mark a notification as read
 const markNotificationAsRead = async (notificationId) => {

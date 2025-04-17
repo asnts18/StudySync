@@ -69,4 +69,5 @@ getGroupMeetings: async (groupId) => {
   }
 };
 
+
 export default meetingService;

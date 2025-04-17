@@ -1,5 +1,8 @@
 // controllers/studyGroupController.js
 const groupService = require('../services/studygroupService');
+const db = require('../config/db.config');
+
+
 
 const createStudyGroup = async (req, res) => {
   try {
@@ -215,8 +218,6 @@ const deleteStudyGroup = async (req, res) => {
     res.status(500).json({ message: 'Failed to delete study group' });
   }
 };
-
-// TODO: Delete study group 
 
 
 const requestJoinGroup = async (req, res) => {

@@ -57,9 +57,11 @@ const studyGroupService = {
     }
   },
 
-  // Join a study group
+  // Join a study group (handles both public and private groups)
   joinGroup: async (groupId) => {
     try {
+      // For public groups, this will add the user directly
+      // For private groups, this will submit a join request
       const response = await api.post(`/study-groups/${groupId}/join`);
       return response.data;
     } catch (error) {
@@ -67,6 +69,29 @@ const studyGroupService = {
       throw error;
     }
   },
+
+  // Request to join a private group (Alternative for explicit join requests)
+  requestJoinGroup: async (groupId) => {
+    try {
+      const response = await api.post(`/study-groups/${groupId}/request-join`);
+      return response.data;
+    } catch (error) {
+      console.error('Error requesting to join group:', error);
+      throw error;
+    }
+  },
+
+  // Get all pending join requests for the current user
+  getPendingJoinRequests: async () => {
+    try {
+      const response = await api.get(`/study-groups/join-requests`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching pending join requests:', error);
+      throw error;
+    }
+  },
+
 
   // Leave a study group
   leaveGroup: async (groupId) => {
@@ -91,27 +116,37 @@ const studyGroupService = {
   },
 
   // Get members of a specific study group
-getGroupMembers: async (groupId) => {
-  try {
-    const response = await api.get(`/study-groups/${groupId}/members`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching group members:', error);
-    throw error;
-  }
-},
+  getGroupMembers: async (groupId) => {
+    try {
+      const response = await api.get(`/study-groups/${groupId}/members`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching group members:', error);
+      throw error;
+    }
+  },
 
-getUniversityGroups: async (universityId) => {
+  // Get study groups from a specific university
+  getUniversityGroups: async (universityId) => {
+    try {
+      const response = await api.get(`/study-groups/university/${universityId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching university groups:', error);
+      throw error;
+    }
+  },
+
+// Remove a member from a study group
+removeGroupMember: async (groupId, memberId) => {
   try {
-    const response = await api.get(`/study-groups/university/${universityId}`);
+    const response = await api.delete(`/study-groups/${groupId}/members/${memberId}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching university groups:', error);
+    console.error('Error removing group member:', error);
     throw error;
   }
 }
-
-  
 };
 
 export default studyGroupService;

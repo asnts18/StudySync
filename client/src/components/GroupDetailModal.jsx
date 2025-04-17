@@ -1,9 +1,13 @@
 // components/GroupDetailModal.jsx
 import React from 'react';
-import { X, Users, BookOpen } from 'lucide-react';
+import { X, Users, BookOpen, Calendar } from 'lucide-react';
+import { formatDateString } from '../utils/groupUtils';
 
 const GroupDetailModal = ({ group, onClose }) => {
   if (!group) return null;
+
+  // Format the created_at date nicely
+  const formattedCreatedDate = group.created_at ? formatDateString(group.created_at) : 'Unknown';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -51,6 +55,15 @@ const GroupDetailModal = ({ group, onClose }) => {
                 {group.course_code ? `${group.course_code}${group.course_name ? `: ${group.course_name}` : ''}` : 'No specific course'}
               </p>
             </div>
+          </div>
+
+          {/* Created Date */}
+          <div className="border-2 border-black p-4">
+            <div className="flex items-center gap-2 text-black">
+              <Calendar className="w-4 h-4" />
+              <span className="font-medium">Created</span>
+            </div>
+            <p className="mt-1 text-left">{formattedCreatedDate}</p>
           </div>
 
           {/* Study Style */}

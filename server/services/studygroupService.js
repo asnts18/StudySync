@@ -241,7 +241,7 @@ const getStudyGroupsByUniversity = async (universityId) => {
         c.name as course_name
       FROM StudyGroup sg
       LEFT JOIN Course c ON sg.course_code = c.course_code AND sg.university_id = c.university_id
-      WHERE sg.university_id = ? AND sg.is_private = 0
+      WHERE sg.university_id = ?
       ORDER BY sg.created_at DESC
       LIMIT 10
     `;
@@ -283,8 +283,6 @@ const getStudyGroupsByUniversity = async (universityId) => {
     throw error;
   }
 };
-
-
 // Get user's study groups (both owned and joined)
 const getUserStudyGroups = async (userId) => {
   try {

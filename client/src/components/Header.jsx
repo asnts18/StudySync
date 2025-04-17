@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from './Logo';
+import PendingRequestsNotification from './PendingRequestsNotification';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, User } from 'lucide-react';
 
@@ -32,6 +33,9 @@ const Header = () => {
               <>
                 {/* Logged in state */}
                 <div className="flex items-center space-x-4">
+                  {/* Pending Requests Notification */}
+                  <PendingRequestsNotification />
+                  
                   <Link 
                     to="/profile" 
                     className="flex items-center space-x-2 hover:text-primary-yellow transition-colors px-3 py-2 rounded-md hover:bg-gray-100"

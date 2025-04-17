@@ -7,6 +7,8 @@ const StudyGroupCard = ({
   group, 
   showViewMoreButton = true, 
   showJoinButton = true,
+  isJoined = false,
+  isPending = false,
   onViewMore,
   onJoinGroup
 }) => {
@@ -23,8 +25,39 @@ const StudyGroupCard = ({
   const isOwner = group.is_owner === 1 || group.is_owner === true;
 
   const handleViewGroup = () => {
-    navigate(`/groups/${group.study_group_id}`);
+    if (isJoined || isOwner) {
+      // If already joined or owner, navigate directly to group page
+      navigate(`/groups/${group.study_group_id}`);
+    } else if (onViewMore) {
+      // Otherwise use the view more function (typically shows modal)
+      onViewMore(group);
+    }
   };
+  
+  // Determine button state and text based on group membership status
+  const getJoinButtonState = () => {
+    if (isJoined) {
+      return {
+        text: "Joined",
+        className: "bg-green-100 text-green-800 hover:bg-green-200 cursor-not-allowed opacity-80",
+        disabled: true
+      };
+    } else if (isPending) {
+      return {
+        text: "Pending",
+        className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200 cursor-not-allowed opacity-80",
+        disabled: true
+      };
+    } else {
+      return {
+        text: "Join Group",
+        className: "bg-primary-yellow text-black hover:bg-dark-yellow",
+        disabled: false
+      };
+    }
+  };
+  
+  const buttonState = getJoinButtonState();
 
   return (
     <div className="border-2 border-black p-4 flex justify-between items-start gap-4">
@@ -61,11 +94,6 @@ const StudyGroupCard = ({
             </div>
           )}
         </div>
-
-        {/* Description section - can be added if needed */}
-        {group.description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{group.description}</p>
-        )}
       </div>
 
       <div className="flex flex-col gap-2 flex-shrink-0">
@@ -77,12 +105,14 @@ const StudyGroupCard = ({
             {isJoinPage ? "See Details" : "View Group"}
           </button>
         )}
+        {/* Always show the button, but its state changes based on status */}
         {showJoinButton && !isOwner && (
           <button 
-            onClick={() => onJoinGroup?.(group)}
-            className="px-4 py-2 border-2 border-black bg-primary-yellow text-black hover:bg-dark-yellow transition-colors"
+            onClick={() => !buttonState.disabled && onJoinGroup?.(group)}
+            disabled={buttonState.disabled}
+            className={`px-4 py-2 border-2 border-black ${buttonState.className} transition-colors`}
           >
-            Join Group
+            {buttonState.text}
           </button>
         )}
       </div>
