@@ -92,7 +92,7 @@ const studyGroupService = {
     }
   },
 
-  // Get all pending join requests for the current user
+  // Respond to a join request
   respondToJoinRequest: async (groupId, requestId, action) => {
     try {
       const response = await api.post(`/study-groups/${groupId}/requests/${requestId}`, { action });
@@ -102,7 +102,6 @@ const studyGroupService = {
       throw error;
     }
   },
-  
 
   // Leave a study group
   leaveGroup: async (groupId) => {
@@ -155,6 +154,33 @@ const studyGroupService = {
       return response.data;
     } catch (error) {
       console.error('Error removing group member:', error);
+      throw error;
+    }
+  },
+
+  // Process a join request using a notification ID
+  handleNotificationRequest: async (notificationId, action) => {
+    try {
+      const response = await api.post(`/study-groups/handle-notification-request/${notificationId}`, { 
+        action 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error handling notification request:', error);
+      throw error;
+    }
+  },
+
+  // Process a join request using a group name (fallback)
+  processByGroupName: async (groupName, action) => {
+    try {
+      const response = await api.post(`/study-groups/process-by-group-name`, { 
+        groupName, 
+        action 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error processing request by group name:', error);
       throw error;
     }
   }

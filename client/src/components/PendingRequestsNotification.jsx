@@ -1,13 +1,16 @@
 // components/PendingRequestsNotification.jsx
 import React, { useState, useEffect } from 'react';
-import { BellRing, Clock, X, User, Check } from 'lucide-react';
+import { BellRing, Clock, X, User, Check, AlertCircle } from 'lucide-react';
+import notificationService from '../api/notificationService';
 import studyGroupService from '../api/studyGroupService';
 
 const PendingRequestsNotification = () => {
+  const [notifications, setNotifications] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [processingActions, setProcessingActions] = useState({});
   
   // Format relative time (e.g., "2 days ago")
   const formatRelativeTime = (dateString) => {
@@ -29,45 +32,107 @@ const PendingRequestsNotification = () => {
     }
   };
   
-  // Fetch pending requests for groups owned by the current user
-  useEffect(() => {
-    const fetchPendingRequests = async () => {
+  // Fetch notifications and pending requests
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch notifications
+      const notificationsData = await notificationService.getNotifications();
+      console.log('Fetched notifications:', notificationsData);
+      setNotifications(notificationsData || []);
+      
+      // Fetch pending join requests
       try {
-        setLoading(true);
-        // This endpoint returns all pending join requests across all groups owned by the user
-        const data = await studyGroupService.getPendingJoinRequests();
-        console.log('Fetched pending requests:', data);
-        setPendingRequests(data);
-        setError('');
-      } catch (error) {
-        console.error('Error fetching pending requests:', error);
-        // Don't show the error message in the UI to avoid confusion
-        // Just set an empty array for pending requests
+        const requestsData = await studyGroupService.getPendingJoinRequests();
+        console.log('Fetched pending requests:', requestsData);
+        setPendingRequests(requestsData || []);
+      } catch (reqError) {
+        console.error('Error fetching pending requests:', reqError);
         setPendingRequests([]);
-        setError('');
-      } finally {
-        setLoading(false);
       }
-    };
+      
+      setError('');
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setError('Failed to load notifications');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Run initial fetch
+  useEffect(() => {
+    fetchData();
     
-    fetchPendingRequests();
-    
-    // Refresh every 5 minutes
-    const intervalId = setInterval(fetchPendingRequests, 5 * 60 * 1000);
-    
+    // Refresh every 60 seconds
+    const intervalId = setInterval(fetchData, 60 * 1000);
     return () => clearInterval(intervalId);
   }, []);
-
+  
   // Handle request response (approve or reject)
-  const handleRequestResponse = async (requestId, groupId, action) => {
+  const handleDirectAction = async (notification, action) => {
     try {
-      await studyGroupService.respondToJoinRequest(groupId, requestId, action);
+      const notificationId = notification.notification_id;
+      setProcessingActions(prev => ({ ...prev, [notificationId]: true }));
       
-      // Update the local state to remove the processed request
-      setPendingRequests(pendingRequests.filter(req => req.request_id !== requestId));
+      console.log(`Processing ${action} for notification:`, notification);
+      
+      // Extract group name from notification
+      const groupNameRegex = /New join request for your study group: (.+)/i;
+      const match = notification.message.match(groupNameRegex);
+      const groupName = match ? match[1] : null;
+      
+      if (!groupName) {
+        alert("Could not extract group name from notification message");
+        return;
+      }
+      
+      // Find the related request by matching the group name
+      const matchingRequest = pendingRequests.find(req => 
+        req.group_name === groupName || 
+        req.name === groupName
+      );
+      
+      console.log('Looking for matching request with group name:', groupName);
+      console.log('Available pending requests:', pendingRequests);
+      console.log('Matching request found:', matchingRequest);
+      
+      if (!matchingRequest) {
+        alert(`Unable to find a pending request for group "${groupName}". The request may have already been processed.`);
+        return;
+      }
+      
+      // Process the request using the existing service method
+      await studyGroupService.respondToJoinRequest(
+        matchingRequest.study_group_id, 
+        matchingRequest.request_id, 
+        action
+      );
+      
+      console.log(`Successfully ${action}ed request`);
+      
+      // Delete the notification
+      await notificationService.deleteNotification(notificationId);
+      
+      // Refresh data
+      await fetchData();
+      
     } catch (error) {
       console.error(`Error ${action}ing request:`, error);
-      setError(`Failed to ${action} request. Please try again.`);
+      alert(`Error processing the request. Please try again later.`);
+    } finally {
+      setProcessingActions(prev => ({ ...prev, [notification.notification_id]: false }));
+    }
+  };
+  
+  // Delete a notification
+  const deleteNotification = async (notificationId) => {
+    try {
+      await notificationService.deleteNotification(notificationId);
+      setNotifications(prev => prev.filter(n => n.notification_id !== notificationId));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
     }
   };
 
@@ -85,6 +150,15 @@ const PendingRequestsNotification = () => {
     };
   }, [isOpen]);
   
+  // Count unread notifications
+  const unreadCount = notifications.filter(n => 
+    n.status === 'unread' || n.status === 'pending'
+  ).length;
+  
+  // Check if a notification is a join request
+  const isJoinRequest = (notification) => {
+    return notification.message.includes('New join request for your study group');
+  };
   
   return (
     <div className="relative notification-dropdown">
@@ -92,12 +166,12 @@ const PendingRequestsNotification = () => {
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-700 hover:bg-gray-100 rounded-full"
-        aria-label={`${pendingRequests.length} pending requests`}
+        aria-label={`${unreadCount} notifications`}
       >
         <BellRing className="w-5 h-5" />
-        {pendingRequests.length > 0 && (
+        {unreadCount > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
-            {pendingRequests.length}
+            {unreadCount}
           </span>
         )}
       </button>
@@ -106,7 +180,7 @@ const PendingRequestsNotification = () => {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white border-2 border-black shadow-lg z-10">
           <div className="p-3 border-b border-gray-200 font-medium flex justify-between items-center">
-            <span>Pending Group Requests</span>
+            <span>Notifications</span>
             <button 
               onClick={() => setIsOpen(false)} 
               className="p-1 hover:bg-gray-100 rounded"
@@ -118,60 +192,66 @@ const PendingRequestsNotification = () => {
           
           {loading ? (
             <div className="p-4 text-center text-gray-500">
-              Loading your requests...
+              Loading notifications...
             </div>
           ) : error ? (
             <div className="p-4 text-center text-red-500">
               {error}
             </div>
-          ) : pendingRequests.length === 0 ? (
+          ) : notifications.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
-              No pending requests.
+              No notifications.
             </div>
           ) : (
             <div className="max-h-80 overflow-y-auto">
-              {pendingRequests.map((request) => (
-                <div key={request.request_id} className="p-3 border-b border-gray-100 hover:bg-gray-50">
+              {notifications.map((notification) => (
+                <div 
+                  key={notification.notification_id} 
+                  className={`p-3 border-b border-gray-100 hover:bg-gray-50 ${
+                    notification.status === 'unread' || notification.status === 'pending' ? 'bg-blue-50' : ''
+                  }`}
+                >
                   <div className="flex items-start">
                     <div className="flex-shrink-0 mt-1">
                       <User className="w-4 h-4 text-gray-500" />
                     </div>
                     <div className="ml-2 flex-1">
-                      <p className="text-sm font-medium">
-                        <span className="font-semibold">{request.first_name} {request.last_name}</span> requests to join <span className="font-semibold">{request.group_name}</span>
-                      </p>
-                      {request.course_code && (
-                        <p className="text-xs text-gray-500">
-                          {request.course_code}{request.course_name ? `: ${request.course_name}` : ''}
-                        </p>
-                      )}
+                      <p className="text-sm">{notification.message}</p>
                       <p className="text-xs text-gray-500 mt-1 flex items-center">
                         <Clock className="w-3 h-3 mr-1" />
-                        Requested {formatRelativeTime(request.request_date)}
+                        {formatRelativeTime(notification.created_at)}
                       </p>
                       
-                      {/* Action buttons */}
-                      <div className="mt-2 flex gap-2">
-                        <button
-                          onClick={() => handleRequestResponse(request.request_id, request.study_group_id, 'approve')}
-                          className="px-2 py-1 bg-primary-yellow border border-black text-xs hover:bg-dark-yellow transition-colors rounded flex items-center"
-                        >
-                          <Check className="w-3 h-3 mr-1" />
-                          Accept
-                        </button>
-                        <button
-                          onClick={() => handleRequestResponse(request.request_id, request.study_group_id, 'reject')}
-                          className="px-2 py-1 bg-gray-100 border border-gray-300 text-xs hover:bg-gray-200 transition-colors rounded flex items-center"
-                        >
-                          <X className="w-3 h-3 mr-1" />
-                          Reject
-                        </button>
-                      </div>
+                      {/* Action buttons for join requests */}
+                      {isJoinRequest(notification) && (
+                        <div className="mt-3 flex gap-2">
+                          <button
+                            onClick={() => handleDirectAction(notification, 'approve')}
+                            disabled={processingActions[notification.notification_id]}
+                            className="px-3 py-2 bg-primary-yellow border-2 border-black text-sm font-medium hover:bg-dark-yellow transition-colors rounded flex items-center disabled:opacity-50"
+                          >
+                            <Check className="w-4 h-4 mr-2" />
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleDirectAction(notification, 'reject')}
+                            disabled={processingActions[notification.notification_id]}
+                            className="px-3 py-2 bg-gray-100 border-2 border-black text-sm font-medium hover:bg-gray-200 transition-colors rounded flex items-center disabled:opacity-50"
+                          >
+                            <X className="w-4 h-4 mr-2" />
+                            Reject
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="flex-shrink-0">
-                      <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
-                        Pending
-                      </span>
+                      <button 
+                        onClick={() => deleteNotification(notification.notification_id)}
+                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                        aria-label="Delete notification"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
                 </div>
