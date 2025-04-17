@@ -37,7 +37,39 @@ const updateUserProfile = async (userId, userData) => {
   }
 };
 
+const getUserMetrics = async (userId) => {
+  try {
+    // Call the stored procedure
+    const result = await db.callProcedure('sp_GetUserMetrics', [userId]);
+    
+    // Check if we have a valid result structure
+    // The data we want is in the first element (an array of result rows)
+    if (!result || !Array.isArray(result[0]) || !result[0][0]) {
+      return {
+        created_groups: 0,
+        joined_groups: 0,
+        achievements: 0,
+        courses: 0
+      };
+    }
+
+    // Extract the first row from the first result set
+    const metrics = result[0][0];
+    
+    return {
+      created_groups: metrics.created_groups || 0,
+      joined_groups: metrics.joined_groups || 0,
+      achievements: metrics.achievements || 0,
+      courses: metrics.courses || 0
+    };
+  } catch (error) {
+    console.error('Error fetching user metrics:', error);
+    throw new Error('Failed to fetch user metrics');
+  }
+};
+
 module.exports = {
   getUserProfile,
-  updateUserProfile
+  updateUserProfile,
+  getUserMetrics
 };

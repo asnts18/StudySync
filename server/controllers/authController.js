@@ -28,25 +28,26 @@ exports.signup = async (req, res) => {
     };
     
     try {
-      // Call the stored procedure
-      const result = await db.callProcedure('sp_RegisterUser', [
-        userData.email,
-        userData.password,
-        userData.first_name,
-        userData.last_name,
-        userData.bio,
-        userData.university_id
-      ]);
-      
-      // Check if registration was successful
-      if (!result || !result[0] || !result[0].user_id) {
-        throw new Error('Registration failed');
-      }
-      
-      // Return success response
-      res.status(201).json({
-        message: "User registered successfully",
-        user_id: result[0].user_id
+        // Call the stored procedure
+        const result = await db.callProcedure('sp_RegisterUser', [
+          userData.email,
+          userData.password,
+          userData.first_name,
+          userData.last_name,
+          userData.bio,
+          userData.university_id
+        ]);
+        
+        // Check if registration was successful
+        // The actual data will be in result[0][0]
+        if (!result || !result[0] || !result[0][0] || !result[0][0].user_id) {
+          throw new Error('Registration failed');
+        }
+        
+        // Return success response
+        res.status(201).json({
+          message: "User registered successfully",
+          user_id: result[0][0].user_id
       });
     } catch (procError) {
       // Check for specific error message from the procedure

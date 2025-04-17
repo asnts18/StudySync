@@ -26,7 +26,25 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const getUserMetrics = async (req, res) => {
+  try {
+    const userId = req.userId; // From auth middleware
+    console.log("Fetching metrics for user ID:", userId);
+    
+    // Call the service method
+    const metrics = await userService.getUserMetrics(userId);
+    console.log("Retrieved metrics:", metrics);
+    
+    // Send the response
+    res.status(200).json(metrics);
+  } catch (error) {
+    console.error('Error in getUserMetrics controller:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   getProfile,
-  updateProfile
+  updateProfile,
+  getUserMetrics
 };
