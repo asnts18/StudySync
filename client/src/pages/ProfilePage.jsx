@@ -82,14 +82,6 @@ const ProfilePage = () => {
                 <p className="text-3xl font-bold">0</p>
                 <p className="text-sm text-gray-500">Study Groups</p>
               </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">0</p>
-                <p className="text-sm text-gray-500">Sessions</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold">0</p>
-                <p className="text-sm text-gray-500">Hours</p>
-              </div>
             </div>
           </div>
         </div>

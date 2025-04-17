@@ -1,3 +1,4 @@
+// pages/CreateGroupPage.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, Plus, X } from "lucide-react";
