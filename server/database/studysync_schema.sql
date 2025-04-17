@@ -851,3 +851,20 @@ END//
 
 DELIMITER ;
 
+DELIMITER //
+
+CREATE PROCEDURE sp_GetUserMetrics(IN in_user_id INT)
+BEGIN
+  SELECT
+    (SELECT COUNT(*) FROM StudyGroup
+        WHERE owner_id = in_user_id)                  AS created_groups,
+    (SELECT COUNT(*) FROM User_StudyGroup
+        WHERE user_id = in_user_id)                  AS joined_groups,
+    (SELECT COUNT(*) FROM UserAchievements
+        WHERE user_id = in_user_id)                  AS achievements,
+    (SELECT COUNT(*) FROM User_Course
+        WHERE user_id = in_user_id)                  AS courses;
+END
+//
+
+DELIMITER ;
