@@ -8,7 +8,8 @@ const createStudyGroup = async ({
   course_code,
   university_id,
   max_capacity,
-  is_private
+  is_private,
+  tags = [] // Add tags parameter with default empty array
 }) => {
   try {
     // Create a connection to manage the transaction
@@ -40,6 +41,23 @@ const createStudyGroup = async ({
         `INSERT INTO User_StudyGroup (user_id, study_group_id) VALUES (?, ?)`,
         [owner_id, studyGroupId]
       );
+      
+      // Add tags to the study group if any were provided
+      if (tags && tags.length > 0) {
+        // Prepare batch insert for the StudyGroup_Tags table
+        const tagValues = tags.map(tagId => [studyGroupId, tagId]);
+        
+        // Create the placeholders for the VALUES clause
+        const placeholders = tagValues.map(() => '(?, ?)').join(', ');
+        
+        // Flatten the 2D array to a 1D array for the execute method
+        const flatTagValues = tagValues.flat();
+        
+        await connection.execute(
+          `INSERT INTO StudyGroup_Tags (study_group_id, tag_id) VALUES ${placeholders}`,
+          flatTagValues
+        );
+      }
       
       // Commit the transaction
       await connection.commit();
@@ -140,25 +158,14 @@ const deleteStudyGroup = async (groupId, userId) => {
 const listStudyGroups = async (filters) => {
   try {
     let sql = `
-    SELECT
-      sg.*,
-      (SELECT COUNT(*) FROM User_StudyGroup usg
-       WHERE usg.study_group_id = sg.study_group_id)  AS current_members,
-      ANY_VALUE(m.location)                           AS location,
-      ANY_VALUE(
-        CONCAT(
-          TIME_FORMAT(m.start_time, '%h:%i%p'), ' - ',
-          TIME_FORMAT(m.end_time,   '%h:%i%p')
-        )
-      ) AS meeting_time
-    FROM StudyGroup sg
-    LEFT JOIN Meeting m
-      ON sg.study_group_id = m.study_group_id
-  `;
-
-  /* … filters exactly like before … */
-
-  sql += ' GROUP BY sg.study_group_id';
+      SELECT sg.*,
+        (SELECT COUNT(*) FROM User_StudyGroup usg
+         WHERE usg.study_group_id = sg.study_group_id) AS current_members,
+        c.name as course_name
+      FROM StudyGroup sg
+      LEFT JOIN Course c ON sg.course_code = c.course_code AND sg.university_id = c.university_id
+    `;
+    
     let conditions = [];
     let params = [];
 
@@ -180,9 +187,8 @@ const listStudyGroups = async (filters) => {
     }
     if (filters.tag) {
       sql += `
-        INNER JOIN Meeting m2 ON sg.study_group_id = m2.study_group_id
-        INNER JOIN Meeting_Tags mt ON m2.meeting_id = mt.meeting_id
-        INNER JOIN Tags t ON mt.tag_id = t.tag_id
+        INNER JOIN StudyGroup_Tags sgt ON sg.study_group_id = sgt.study_group_id
+        INNER JOIN Tags t ON sgt.tag_id = t.tag_id
       `;
       conditions.push('t.name = ?');
       params.push(filters.tag);
@@ -192,38 +198,20 @@ const listStudyGroups = async (filters) => {
       sql += ' WHERE ' + conditions.join(' AND ');
     }
     
-    sql += ' GROUP BY sg.study_group_id';
-
     // Execute the query
     const groups = await db.query(sql, params);
     
     // For each group, fetch associated tags
     for (const group of groups) {
-      // Get all meetings for this group
-      const meetings = await db.query(
-        `SELECT meeting_id FROM Meeting WHERE study_group_id = ?`,
+      const tags = await db.query(
+        `SELECT t.name 
+         FROM Tags t
+         JOIN StudyGroup_Tags sgt ON t.tag_id = sgt.tag_id
+         WHERE sgt.study_group_id = ?`,
         [group.study_group_id]
       );
       
-      // Collect all tag names for all meetings of this group
-      const tags = [];
-      for (const meeting of meetings) {
-        const meetingTags = await db.query(
-          `SELECT t.name 
-           FROM Tags t
-           JOIN Meeting_Tags mt ON t.tag_id = mt.tag_id
-           WHERE mt.meeting_id = ?`,
-          [meeting.meeting_id]
-        );
-        
-        meetingTags.forEach(tag => {
-          if (!tags.includes(tag.name)) {
-            tags.push(tag.name);
-          }
-        });
-      }
-      
-      group.tags = tags;
+      group.tags = tags.map(tag => tag.name);
     }
     
     return groups;
@@ -248,33 +236,17 @@ const getStudyGroupsByUniversity = async (universityId) => {
     
     const groups = await db.query(sql, [universityId]);
     
-    // For each group, fetch associated tags through meetings
+    // For each group, fetch associated tags directly from StudyGroup_Tags
     for (const group of groups) {
-      // Get all meetings for this group
-      const meetings = await db.query(
-        `SELECT meeting_id FROM Meeting WHERE study_group_id = ?`,
+      const tags = await db.query(
+        `SELECT t.name 
+         FROM Tags t
+         JOIN StudyGroup_Tags sgt ON t.tag_id = sgt.tag_id
+         WHERE sgt.study_group_id = ?`,
         [group.study_group_id]
       );
       
-      // Collect all tag names for all meetings of this group
-      const tags = [];
-      for (const meeting of meetings) {
-        const meetingTags = await db.query(
-          `SELECT t.name 
-           FROM Tags t
-           JOIN Meeting_Tags mt ON t.tag_id = mt.tag_id
-           WHERE mt.meeting_id = ?`,
-          [meeting.meeting_id]
-        );
-        
-        meetingTags.forEach(tag => {
-          if (!tags.includes(tag.name)) {
-            tags.push(tag.name);
-          }
-        });
-      }
-      
-      group.tags = tags;
+      group.tags = tags.map(tag => tag.name);
     }
     
     return groups;
@@ -283,6 +255,7 @@ const getStudyGroupsByUniversity = async (universityId) => {
     throw error;
   }
 };
+
 // Get user's study groups (both owned and joined)
 const getUserStudyGroups = async (userId) => {
   try {
@@ -291,24 +264,10 @@ const getUserStudyGroups = async (userId) => {
         sg.*,
         (SELECT COUNT(*) FROM User_StudyGroup usg WHERE usg.study_group_id = sg.study_group_id) as current_members,
         sg.owner_id = ? as is_owner,
-        m.location,
-        m.start_time,
-        m.end_time,
-        CONCAT(
-          TIME_FORMAT(m.start_time, '%h:%i%p'), ' - ', 
-          TIME_FORMAT(m.end_time, '%h:%i%p')
-        ) as meeting_time
+        c.name as course_name
       FROM StudyGroup sg
       JOIN User_StudyGroup usg ON sg.study_group_id = usg.study_group_id
-      LEFT JOIN (
-        SELECT study_group_id, location, start_time, end_time
-        FROM Meeting
-        WHERE meeting_id IN (
-          SELECT MIN(meeting_id) 
-          FROM Meeting 
-          GROUP BY study_group_id
-        )
-      ) m ON sg.study_group_id = m.study_group_id
+      LEFT JOIN Course c ON sg.course_code = c.course_code AND sg.university_id = c.university_id
       WHERE usg.user_id = ?
     `;
     
@@ -321,33 +280,17 @@ const getUserStudyGroups = async (userId) => {
       is_owner: group.is_owner === 1 || group.is_owner === true // Ensure boolean conversion
     }));
     
-    // For each group, fetch associated tags
+    // For each group, fetch associated tags directly from StudyGroup_Tags
     for (const group of processedGroups) {
-      // Get all meetings for this group
-      const meetings = await db.query(
-        `SELECT meeting_id FROM Meeting WHERE study_group_id = ?`,
+      const tags = await db.query(
+        `SELECT t.name 
+         FROM Tags t
+         JOIN StudyGroup_Tags sgt ON t.tag_id = sgt.tag_id
+         WHERE sgt.study_group_id = ?`,
         [group.study_group_id]
       );
       
-      // Collect all tag names for all meetings of this group
-      const tags = [];
-      for (const meeting of meetings) {
-        const meetingTags = await db.query(
-          `SELECT t.name 
-           FROM Tags t
-           JOIN Meeting_Tags mt ON t.tag_id = mt.tag_id
-           WHERE mt.meeting_id = ?`,
-          [meeting.meeting_id]
-        );
-        
-        meetingTags.forEach(tag => {
-          if (!tags.includes(tag.name)) {
-            tags.push(tag.name);
-          }
-        });
-      }
-      
-      group.tags = tags;
+      group.tags = tags.map(tag => tag.name);
     }
     
     return processedGroups;
@@ -356,7 +299,6 @@ const getUserStudyGroups = async (userId) => {
     throw error;
   }
 };
-
 
 // Get a specific study group by its ID
 const getStudyGroupById = async (groupId) => {
@@ -369,7 +311,25 @@ const getStudyGroupById = async (groupId) => {
       LIMIT 1
     `;
     const groups = await db.query(sql, [groupId]);
-    return groups[0] || null;
+    
+    if (groups.length === 0) {
+      return null;
+    }
+    
+    const group = groups[0];
+    
+    // Fetch tags for this group
+    const tags = await db.query(
+      `SELECT t.name 
+       FROM Tags t
+       JOIN StudyGroup_Tags sgt ON t.tag_id = sgt.tag_id
+       WHERE sgt.study_group_id = ?`,
+      [groupId]
+    );
+    
+    group.tags = tags.map(tag => tag.name);
+    
+    return group;
   } catch (error) {
     console.error('DB error getting study group by ID:', error);
     throw error;
@@ -421,7 +381,6 @@ const joinStudyGroup = async (userId, groupId) => {
   }
 };
 
-
 // Leave a study group
 const leaveStudyGroup = async (userId, groupId) => {
   try {
@@ -458,7 +417,6 @@ const leaveStudyGroup = async (userId, groupId) => {
     throw error;
   }
 };
-
 
 // List all members of a study group
 const listGroupMembers = async (studyGroupId) => {
@@ -668,51 +626,90 @@ const processByGroupName = async (groupName, action, userId) => {
       throw new Error('Group name is required');
     }
     
+    console.log(`processByGroupName called with group name: "${groupName}" and action: "${action}"`);
+    
+    
     // 1. Get the group by name
-    const [groups] = await db.query(
-      'SELECT study_group_id FROM StudyGroup WHERE name = ? AND owner_id = ?',
-      [groupName, userId]
+    const groupRows = await db.query(
+      'SELECT study_group_id, owner_id FROM StudyGroup WHERE name = ?',
+      [groupName]
     );
     
-    if (!groups || groups.length === 0) {
-      throw new Error('Study group not found with name: ' + groupName);
+    if (!groupRows || groupRows.length === 0) {
+      throw new Error(`Study group not found with name: ${groupName}`);
     }
     
-    const group = groups[0];
+    const group = groupRows[0];
     
-    // 2. Get the latest pending request for this group
-    const [pendingRequests] = await db.query(
+    // Verify current user is the group owner
+    if (group.owner_id !== userId) {
+      throw new Error('Only the group owner can process join requests');
+    }
+    
+    console.log(`Found group with ID: ${group.study_group_id}`);
+    
+    // 2. Get all pending requests for this group
+    const pendingRequestRows = await db.query(
       `SELECT * FROM GroupJoinRequests 
        WHERE study_group_id = ? AND status = 'pending'
-       ORDER BY request_date DESC LIMIT 1`,
+       ORDER BY request_date DESC`,
       [group.study_group_id]
     );
     
-    if (!pendingRequests || pendingRequests.length === 0) {
-      throw new Error('No pending join request found for group: ' + groupName);
+    console.log(`Found ${pendingRequestRows.length} pending request(s) for group`);
+    
+    if (!pendingRequestRows || pendingRequestRows.length === 0) {
+      throw new Error(`No pending join request found for group: ${groupName}`);
     }
     
-    const pendingRequest = pendingRequests[0];
+    // Process the most recent request
+    const pendingRequest = pendingRequestRows[0];
+    console.log(`Processing request ID: ${pendingRequest.request_id}`);
     
-    // 3. Process the request using the existing stored procedure
-    await db.callProcedure('sp_ProcessJoinRequest', [
-      pendingRequest.user_id,
-      group.study_group_id,
-      action,
-      action === 'approve' ? 'Welcome to the group!' : 'Your request was rejected'
-    ]);
-    
-    return {
-      success: true,
-      message: `Join request ${action}ed successfully`,
-      group: groupName
-    };
+    // 3. Begin transaction to ensure consistent database state
+    const connection = await db.pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      
+      // Update the request status
+      await connection.execute(
+        `UPDATE GroupJoinRequests 
+         SET status = ?, response_date = CURRENT_TIMESTAMP 
+         WHERE request_id = ?`,
+        [action === 'approve' ? 'approved' : 'rejected', pendingRequest.request_id]
+      );
+      
+      // If approving, add the user to the group members
+      if (action === 'approve') {
+        await connection.execute(
+          `INSERT INTO User_StudyGroup (user_id, study_group_id) 
+           VALUES (?, ?)`,
+          [pendingRequest.user_id, group.study_group_id]
+        );
+      }
+      
+      await connection.commit();
+      
+      console.log(`Successfully ${action}ed request`);
+      
+      return {
+        success: true,
+        message: `Join request ${action}ed successfully`,
+        group: groupName,
+        requestId: pendingRequest.request_id
+      };
+    } catch (transactionError) {
+      await connection.rollback();
+      console.error('Transaction error:', transactionError);
+      throw transactionError;
+    } finally {
+      connection.release();
+    }
   } catch (error) {
     console.error(`Error processing request by group name:`, error);
     throw error;
   }
 };
-
 
 module.exports = { 
   createStudyGroup, 

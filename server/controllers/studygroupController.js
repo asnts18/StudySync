@@ -2,8 +2,6 @@
 const groupService = require('../services/studygroupService');
 const db = require('../config/db.config');
 
-
-
 const createStudyGroup = async (req, res) => {
   try {
     const owner_id = req.userId; // From auth middleware
@@ -14,6 +12,7 @@ const createStudyGroup = async (req, res) => {
       university_id,
       max_capacity,
       is_private,
+      tags,
     } = req.body;
 
     // Basic validation (could be moved to validator middleware)
@@ -28,7 +27,8 @@ const createStudyGroup = async (req, res) => {
       course_code: course_code || null,
       university_id,
       max_capacity: max_capacity || 8,
-      is_private: is_private || false
+      is_private: is_private || false,
+      tags: tags || [] // Pass tags to the service
     });
 
     res.status(201).json(newGroup);
@@ -272,6 +272,29 @@ const respondToJoinRequest = async (req, res) => {
   }
 };
 
+  const processByGroupName = async (req, res) => {
+    try {
+      const { groupName, action } = req.body;
+      const userId = req.userId; // From auth middleware
+      
+      if (!groupName || !action) {
+        return res.status(400).json({ message: 'Group name and action are required' });
+      }
+      
+      if (!['approve', 'reject'].includes(action)) {
+        return res.status(400).json({ message: 'Action must be either approve or reject' });
+      }
+      
+      const result = await groupService.processByGroupName(groupName, action, userId);
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('Error processing by group name:', error);
+      res.status(500).json({ message: error.message || 'Failed to process request' });
+    }
+  };
+
+
+
 module.exports = { 
   createStudyGroup, 
   listStudyGroups,
@@ -286,5 +309,6 @@ module.exports = {
   removeMember,
   requestJoinGroup,
   getPendingRequests,
-  respondToJoinRequest
+  respondToJoinRequest,
+  processByGroupName
 };

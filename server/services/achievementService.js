@@ -138,14 +138,17 @@ const createGroupAchievement = async (groupId, ownerId, { name, description }) =
       [name, description || null, parsedGroupId]
     );
     
+    
     console.log('Group achievement created with ID:', result.insertId);
     
-    const rows = await db.query('SELECT * FROM Achievements WHERE achievement_id = ?', [result.insertId]);
+    // Get the single created achievement (not as array)
+    const [rows] = await db.query('SELECT * FROM Achievements WHERE achievement_id = ?', [result.insertId]);
     
     if (!rows || rows.length === 0) {
       throw new Error('Failed to retrieve created achievement');
     }
     
+    // Return a single object, not an array
     return rows[0];
   } catch (error) {
     console.error('Error in createGroupAchievement:', error);
@@ -265,7 +268,6 @@ const revokeAchievement = async (groupId, ownerId, memberId, achievementId) => {
   }
 };
 
-// New function: Get user achievements
 const getUserAchievements = async (userId) => {
   try {
     console.log(`Getting achievements for user ${userId}`);

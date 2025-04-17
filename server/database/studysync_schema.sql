@@ -251,8 +251,8 @@ INSERT INTO Tags (tag_id,name, description) VALUES
 (4,'Homework', 'A tag for meetings dedicated to working on homework or assignments'),
 (5,'Project Work', 'A tag for meetings focused on collaborative project work');
 
--- Insert Meeting_Tags (many-to-many relationship between Meetings and Tags)
-INSERT INTO Meeting_Tags (meeting_id, tag_id) VALUES
+-- Insert StudyGroup_Tags (many-to-many relationship between StudyGroup and Tags)
+INSERT INTO StudyGroup_Tags (study_group_id, tag_id) VALUES
 (1, 1),  -- CS61A Midterm Review tagged as Quiet Study
 (1, 2),  -- CS61A Midterm Review tagged as Exam Prep
 (2, 4),  -- MATH51 Problem Session tagged as Homework
@@ -260,9 +260,8 @@ INSERT INTO Meeting_Tags (meeting_id, tag_id) VALUES
 (3, 5),  -- Algorithms Study Session tagged as Project Work
 (4, 3),  -- CS50 Office Hours tagged as Social
 (5, 4),  -- INFO340 Project Planning tagged as Homework
-(6, 5),  -- Weekly CS61A Study tagged as Project Work
-(7, 1),  -- MATH51 Discussion tagged as Quiet Study
-(8, 2);  -- Algorithms Practice tagged as Exam Prep
+(5, 5),  -- Weekly CS61A Study tagged as Project Work
+(4, 1);  -- MATH51 Discussion tagged as Quiet Study
 
 -- Insert GroupJoinRequests
 INSERT INTO GroupJoinRequests (user_id, study_group_id, request_date, status, response_date, response_message) VALUES
@@ -295,6 +294,3 @@ VALUES
     (6, 'Your account has been successfully created.'),
     (7, 'Your profile was updated successfully.'),
     (8, 'You have a new friend request.');
-
-
-

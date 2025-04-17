@@ -1,3 +1,4 @@
+// server/routes/studyGroupRoutes.js
 const express = require('express');
 const router = express.Router();
 const groupController = require('../controllers/studygroupController');
@@ -16,6 +17,8 @@ router.get('/:id', groupController.getGroupDetail);
 
 router.get('/join-requests', auth.verifyToken, groupController.getPendingRequests);
 router.post('/:id/requests/:requestId', auth.verifyToken, groupController.respondToJoinRequest);
+router.post('/process-by-group-name', auth.verifyToken, groupController.processByGroupName);
+
 
 router.post('/:id/join', auth.verifyToken, groupController.joinStudyGroup);
 router.delete('/:id/members', auth.verifyToken, groupController.leaveStudyGroup);
