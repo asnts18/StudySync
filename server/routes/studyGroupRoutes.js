@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const groupController = require('../controllers/studygroupController');
-const auth = require('../middleware/auth.middleware');
+const auth = require('../middleware/authMiddleware');
 
 
 router.post('/', auth.verifyToken, groupController.createStudyGroup);

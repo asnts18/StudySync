@@ -1,4 +1,4 @@
-// controllers/studyGroupController.js
+// server/controllers/studyGroupController.js
 const groupService = require('../services/studygroupService');
 const db = require('../config/db.config');
 

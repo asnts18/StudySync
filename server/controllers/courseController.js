@@ -1,3 +1,5 @@
+// server/controllers/courseController.js
+
 const courseService = require('../services/courseService');
 
 const getCoursesByUniversity = async (req, res) => {

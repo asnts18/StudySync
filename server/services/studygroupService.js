@@ -9,80 +9,58 @@ const createStudyGroup = async ({
   university_id,
   max_capacity,
   is_private,
-  tags = [] // Add tags parameter with default empty array
+  tags = []
 }) => {
+  let connection;
+  
   try {
-    // Create a connection to manage the transaction
-    const connection = await db.pool.getConnection();
+    // Get connection for transaction handling
+    connection = await db.pool.getConnection();
     
-    try {
-      // Start transaction
-      await connection.beginTransaction();
+    // Declare variable to store the output parameter
+    let groupId;
+    
+    // Call the stored procedure to create the group
+    const result = await connection.query(
+      'CALL sp_CreateStudyGroup(?, ?, ?, ?, ?, ?, ?, @group_id)',
+      [name, description, owner_id, course_code, university_id, max_capacity, is_private ? 1 : 0]
+    );
+    
+    // Get the output parameter (group_id)
+    const [outputResult] = await connection.query('SELECT @group_id as group_id');
+    groupId = outputResult[0].group_id;
+    
+    // Add tags if provided
+    if (tags && tags.length > 0) {
+      // Prepare batch insert for the StudyGroup_Tags table
+      const tagValues = tags.map(tagId => [groupId, tagId]);
       
-      // Validate max_capacity
-      const validatedCapacity = Math.min(Math.max(parseInt(max_capacity) || 8, 1), 8);
+      // Create the placeholders for the VALUES clause
+      const placeholders = tagValues.map(() => '(?, ?)').join(', ');
       
-      // Set university_id default if not provided (should not happen due to NOT NULL constraint)
-      if (!university_id) {
-        throw new Error('university_id is required for study group creation');
-      }
+      // Flatten the 2D array to a 1D array for the execute method
+      const flatTagValues = tagValues.flat();
       
-      // Insert study group
-      const [groupResult] = await connection.execute(
-        `INSERT INTO StudyGroup (name, description, owner_id, course_code, university_id, max_capacity, is_private)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [name, description, owner_id, course_code, university_id, validatedCapacity, is_private === true ? 1 : 0]
+      await connection.query(
+        `INSERT INTO StudyGroup_Tags (study_group_id, tag_id) VALUES ${placeholders}`,
+        flatTagValues
       );
-      
-      const studyGroupId = groupResult.insertId;
-      
-      // Add the creator as a member of the group
-      await connection.execute(
-        `INSERT INTO User_StudyGroup (user_id, study_group_id) VALUES (?, ?)`,
-        [owner_id, studyGroupId]
-      );
-      
-      // Add tags to the study group if any were provided
-      if (tags && tags.length > 0) {
-        // Prepare batch insert for the StudyGroup_Tags table
-        const tagValues = tags.map(tagId => [studyGroupId, tagId]);
-        
-        // Create the placeholders for the VALUES clause
-        const placeholders = tagValues.map(() => '(?, ?)').join(', ');
-        
-        // Flatten the 2D array to a 1D array for the execute method
-        const flatTagValues = tagValues.flat();
-        
-        await connection.execute(
-          `INSERT INTO StudyGroup_Tags (study_group_id, tag_id) VALUES ${placeholders}`,
-          flatTagValues
-        );
-      }
-      
-      // Commit the transaction
-      await connection.commit();
-      
-      // Fetch the newly created group
-      const [groupDetails] = await connection.execute(
-        `SELECT study_group_id, name, description, owner_id, course_code, university_id, 
-                max_capacity, is_private, created_at, updated_at
-         FROM StudyGroup 
-         WHERE study_group_id = ?`,
-        [studyGroupId]
-      );
-      
-      return groupDetails[0];
-    } catch (error) {
-      // Rollback in case of error
-      await connection.rollback();
-      throw error;
-    } finally {
-      // Release connection
-      connection.release();
     }
+    
+    // Get the created group details
+    const [groupDetails] = await connection.query(
+      'SELECT * FROM StudyGroup WHERE study_group_id = ?',
+      [groupId]
+    );
+    
+    return groupDetails[0];
   } catch (error) {
-    console.error('DB error creating study group:', error);
-    throw error;
+    console.error('Error creating study group:', error);
+    throw new Error(`Failed to create study group: ${error.message}`);
+  } finally {
+    if (connection) {
+      connection.release(); // Always release the connection
+    }
   }
 };
 
@@ -158,63 +136,36 @@ const deleteStudyGroup = async (groupId, userId) => {
 const listStudyGroups = async (filters) => {
   try {
     let sql = `
-      SELECT sg.*,
-        (SELECT COUNT(*) FROM User_StudyGroup usg
-         WHERE usg.study_group_id = sg.study_group_id) AS current_members,
-        c.name as course_name
-      FROM StudyGroup sg
-      LEFT JOIN Course c ON sg.course_code = c.course_code AND sg.university_id = c.university_id
+      SELECT * FROM vw_StudyGroupWithMemberCount
+      WHERE 1=1
     `;
     
     let conditions = [];
     let params = [];
 
     if (filters.name) {
-      conditions.push('sg.name LIKE ?');
+      conditions.push('name LIKE ?');
       params.push(`%${filters.name}%`);
     }
     if (filters.course_code) {
-      conditions.push('sg.course_code = ?');
+      conditions.push('course_code = ?');
       params.push(filters.course_code);
     }
     if (filters.university_id) {
-      conditions.push('sg.university_id = ?');
+      conditions.push('university_id = ?');
       params.push(filters.university_id);
     }
     if (filters.is_private !== undefined) {
-      conditions.push('sg.is_private = ?');
+      conditions.push('is_private = ?');
       params.push(filters.is_private ? 1 : 0);
-    }
-    if (filters.tag) {
-      sql += `
-        INNER JOIN StudyGroup_Tags sgt ON sg.study_group_id = sgt.study_group_id
-        INNER JOIN Tags t ON sgt.tag_id = t.tag_id
-      `;
-      conditions.push('t.name = ?');
-      params.push(filters.tag);
     }
     
     if (conditions.length > 0) {
-      sql += ' WHERE ' + conditions.join(' AND ');
+      sql += ' AND ' + conditions.join(' AND ');
     }
     
     // Execute the query
-    const groups = await db.query(sql, params);
-    
-    // For each group, fetch associated tags
-    for (const group of groups) {
-      const tags = await db.query(
-        `SELECT t.name 
-         FROM Tags t
-         JOIN StudyGroup_Tags sgt ON t.tag_id = sgt.tag_id
-         WHERE sgt.study_group_id = ?`,
-        [group.study_group_id]
-      );
-      
-      group.tags = tags.map(tag => tag.name);
-    }
-    
-    return groups;
+    return await db.query(sql, params);
   } catch (error) {
     console.error('DB error listing study groups:', error);
     throw error;
@@ -339,44 +290,33 @@ const getStudyGroupById = async (groupId) => {
 // Join a study group with privacy logic
 const joinStudyGroup = async (userId, groupId) => {
   try {
-    // Fetch the study group record
-    const group = await getStudyGroupById(groupId);
-    if (!group) {
-      throw new Error('Study group not found');
+    console.log(`User ${userId} attempting to join group ${groupId}`);
+    
+    // Call the stored procedure
+    const results = await db.callProcedure('sp_JoinStudyGroup', [userId, groupId]);
+    
+    if (!results || !results[0] || !results[0][0]) {
+      throw new Error('Failed to process join request');
     }
     
-    // Check if user is already a member
-    const existingMembership = await db.query(
-      'SELECT 1 FROM User_StudyGroup WHERE user_id = ? AND study_group_id = ?',
-      [userId, groupId]
-    );
-    if (existingMembership.length > 0) {
-      return { success: false, message: 'User is already a member of this group' };
-    }
+    const result = results[0][0];
     
-    // Check if the group is full
-    if (group.current_members >= group.max_capacity) {
-      return { success: false, message: 'Group is already at full capacity' };
-    }
-    
-    // Check the group's privacy setting:
-    if (group.is_private === 1 || group.is_private === true) {
-      // For a private group, insert a join request into GroupJoinRequests.
-      await db.query(
-        'INSERT INTO GroupJoinRequests (user_id, study_group_id) VALUES (?, ?)',
-        [userId, groupId]
-      );
-      return { success: true, message: 'Join request submitted successfully (private group).' };
-    } else {
-      // For a public group, add the user directly to User_StudyGroup.
-      await db.query(
-        'INSERT INTO User_StudyGroup (user_id, study_group_id) VALUES (?, ?)',
-        [userId, groupId]
-      );
-      return { success: true, message: 'Successfully joined the study group (public group).' };
-    }
+    return {
+      success: result.success,
+      message: result.message
+    };
   } catch (error) {
-    console.error('DB error joining study group:', error);
+    console.error('Error joining study group:', error);
+    
+    // Translate database errors to user-friendly messages
+    if (error.message.includes('User is already a member')) {
+      throw new Error('You are already a member of this group');
+    } else if (error.message.includes('Study group not found')) {
+      throw new Error('Study group not found');
+    } else if (error.message.includes('maximum capacity')) {
+      throw new Error('This study group is already at maximum capacity');
+    }
+    
     throw error;
   }
 };
@@ -421,18 +361,13 @@ const leaveStudyGroup = async (userId, groupId) => {
 // List all members of a study group
 const listGroupMembers = async (studyGroupId) => {
   try {
-    console.log('Fetching members for group ID:', studyGroupId);
-    const sql = `
-      SELECT u.user_id, u.email, u.first_name, u.last_name, u.bio, univ.name as university_name
-      FROM User_StudyGroup usg
-      JOIN User u ON usg.user_id = u.user_id
-      LEFT JOIN University univ ON u.university_id = univ.university_id
-      WHERE usg.study_group_id = ?
-    `;
+    // Use the view for a cleaner query
+    const sql = 'SELECT * FROM vw_GroupMembersWithDetails WHERE study_group_id = ?';
     const members = await db.query(sql, [studyGroupId]);
+    
     return members;
   } catch (error) {
-    console.error('DB error listing group members:', error);
+    console.error('Error listing group members:', error);
     throw error;
   }
 };

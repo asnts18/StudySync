@@ -1,4 +1,4 @@
-// controllers/universityController.js
+// server/controllers/universityController.js
 const universityService = require('../services/universityService');
 
 const getAllUniversities = async (req, res) => {

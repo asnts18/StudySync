@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const meetingController = require('../controllers/meetingController');
-const auth = require('../middleware/auth.middleware');
+const auth = require('../middleware/authMiddleware');
 
 // Protected endpoint: Create a new meeting (requires authentication)
 router.post('/', auth.verifyToken, meetingController.createMeeting);

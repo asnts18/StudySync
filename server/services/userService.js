@@ -3,20 +3,25 @@ const db = require('../config/db.config');
 
 const getUserProfile = async (userId) => {
   try {
-    const rows = await db.query(
-      `SELECT u.user_id, u.email, u.first_name, u.last_name, u.bio, u.university_id, 
-              univ.name as university_name
-       FROM User u
-       LEFT JOIN University univ ON u.university_id = univ.university_id
-       WHERE u.user_id = ?`, 
-      [userId]
-    );
-    return rows[0];
+    // Simple user profile without detailed stats
+    const results = await db.callProcedure('sp_GetUserProfile', [userId]);
+    
+    if (!results || !results[0] || results[0].length === 0) {
+      return null;
+    }
+    
+    return {
+      userInfo: results[0][0],
+      achievements: results[1] || [],
+      groups: results[2] || [],
+      courses: results[3] || []
+    };
   } catch (error) {
     console.error('Error fetching user profile:', error);
     throw new Error('Failed to fetch user profile');
   }
 };
+
 
 const updateUserProfile = async (userId, userData) => {
   try {
@@ -32,86 +37,7 @@ const updateUserProfile = async (userId, userData) => {
   }
 };
 
-const achievementService = require('./achievementService');
-
-// TODO: CHECK 
-// Get comprehensive user profile with achievements
-const getFullUserProfile = async (userId) => {
-  try {
-    // Get basic user info
-    const userRows = await db.query(
-      `SELECT u.user_id, u.email, u.first_name, u.last_name, u.bio,
-              univ.name as university_name
-       FROM User u
-       LEFT JOIN University univ ON u.university_id = univ.university_id
-       WHERE u.user_id = ?`,
-      [userId]
-    );
-    
-    if (userRows.length === 0) {
-      return null;
-    }
-    
-    const user = userRows[0];
-    
-    // Get user achievements
-    const achievements = await achievementService.getUserAchievements(userId);
-    
-    // Get number of courses the user is enrolled in
-    const courseCountResult = await db.query(
-      'SELECT COUNT(*) as course_count FROM User_Course WHERE user_id = ?',
-      [userId]
-    );
-    const courseCount = courseCountResult[0].course_count;
-    
-    // Get number of study groups the user belongs to
-    const groupCountResult = await db.query(
-      'SELECT COUNT(*) as group_count FROM User_StudyGroup WHERE user_id = ?',
-      [userId]
-    );
-    const groupCount = groupCountResult[0].group_count;
-    
-    // Calculate total achievement points
-    const totalPoints = achievements.reduce((sum, achievement) => sum + achievement.point_value || 0, 0);
-    
-    // Return combined profile
-    return {
-      ...user,
-      stats: {
-        totalAchievements: achievements.length,
-        totalPoints,
-        courseCount,
-        groupCount
-      },
-      achievements
-    };
-  } catch (error) {
-    console.error('Error fetching full user profile:', error);
-    throw new Error('Failed to fetch user profile with achievements');
-  }
-};
-
-// TODO: CHECL
-// Add the stored procedure implementation from userController
-const getCompleteUserProfileUsingProcedures = async (userId) => {
-  try {
-    // Call stored procedure instead of direct queries
-    const result = await db.callProcedure('sp_GetUserProfile', [userId]);
-    
-    if (!result || result.length === 0) {
-      return null;
-    }
-    
-    return result[0]; // Return first row of result set
-  } catch (error) {
-    console.error('Error fetching complete user profile using procedures:', error);
-    throw new Error('Failed to fetch complete user profile');
-  }
-};
-
 module.exports = {
   getUserProfile,
-  updateUserProfile,
-  getFullUserProfile,
-  getCompleteUserProfileUsingProcedures
+  updateUserProfile
 };

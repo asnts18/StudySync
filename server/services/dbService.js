@@ -1,4 +1,4 @@
-// server/services/db.service.js
+// server/services/dbService.js
 const db = require('../config/db.config');
 
 class DatabaseService {

@@ -1,7 +1,7 @@
 // server/routes/achievementRoutes.js
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth.middleware');
+const auth = require('../middleware/authMiddleware');
 const achievementController = require('../controllers/achievementController');
 
 // IMPORTANT: Order matters for routes with similar patterns
