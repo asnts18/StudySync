@@ -42,7 +42,7 @@ const JoinGroupPage = () => {
           study_group_id: group.study_group_id,
           name: group.name,
           description: group.description,
-          currentMembers: group.current_members || 1,
+          current_members: group.current_members || 1,
           maxMembers: group.max_capacity,
           course_code: group.course_code,
           course_name: group.course_name,
